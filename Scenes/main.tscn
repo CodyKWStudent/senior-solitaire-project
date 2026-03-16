@@ -1,0 +1,34 @@
+[gd_scene format=3 uid="uid://mtn0uqmdfwin"]
+
+[ext_resource type="Script" uid="uid://bfsnsntrnrf2k" path="res://Scenes/CardManager.cs" id="1_bo1nx"]
+[ext_resource type="PackedScene" uid="uid://bakat5eserdke" path="res://Scenes/AceHearts.tscn" id="2_8gbba"]
+[ext_resource type="PackedScene" uid="uid://b38texs5rhacg" path="res://Scenes/CardSlotClubs.tscn" id="3_21xkr"]
+[ext_resource type="PackedScene" uid="uid://cnc85uj27nld0" path="res://Scenes/CardSlotDiamonds.tscn" id="4_6bp64"]
+[ext_resource type="PackedScene" uid="uid://dg4omqbtuyku" path="res://Scenes/CardSlotHearts.tscn" id="5_344ge"]
+[ext_resource type="PackedScene" uid="uid://dudufb7xanac4" path="res://Scenes/CardSlotSpades.tscn" id="6_ynf5e"]
+[ext_resource type="PackedScene" uid="uid://qchianuji45o" path="res://Scenes/CardSlot.tscn" id="7_6bp64"]
+
+[node name="Main" type="Node2D" unique_id=1948449585]
+metadata/_edit_vertical_guides_ = [1081.0]
+metadata/_edit_horizontal_guides_ = [1920.0]
+
+[node name="CardSlot2" parent="." unique_id=1245913516 instance=ExtResource("3_21xkr")]
+position = Vector2(716, 138)
+
+[node name="CardSlot3" parent="." unique_id=1086857743 instance=ExtResource("4_6bp64")]
+position = Vector2(137, 137)
+
+[node name="CardSlot4" parent="." unique_id=1963230758 instance=ExtResource("5_344ge")]
+position = Vector2(521, 138)
+
+[node name="CardSlot5" parent="." unique_id=1517425105 instance=ExtResource("6_ynf5e")]
+position = Vector2(333, 138)
+
+[node name="CardSlot" parent="." unique_id=791667770 instance=ExtResource("7_6bp64")]
+position = Vector2(476, 440)
+
+[node name="CardManager" type="Node2D" parent="." unique_id=2017600728]
+script = ExtResource("1_bo1nx")
+
+[node name="Card" parent="CardManager" unique_id=1998219088 instance=ExtResource("2_8gbba")]
+position = Vector2(272, 439)
