@@ -10,9 +10,13 @@ public partial class Deck : Node2D
     
     // We will keep an array of our 7 Tableaus to easily reference them
     CardTableau[] tableaus = new CardTableau[7];
+
+	CardTableau cardTableau = new CardTableau();
     
     PackedScene CARD_SCENE = (PackedScene)GD.Load("res://Scenes/Card.tscn");
     PackedScene TABLEAU_SCENE = (PackedScene)GD.Load("res://Scenes/CardTableau.tscn");
+	[Export]
+	public Node2D tableauContainer;
 	
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -30,35 +34,31 @@ public partial class Deck : Node2D
 	public void GenerateTableaus()
 	{
 		//Programmatically create the 7 columns and space them out horizontally
-		for (int i = 0; i < 7; i++)
+		for (int i = 1; i < 7; i++)
         {
             CardTableau newTableau = TABLEAU_SCENE.Instantiate<CardTableau>();
             newTableau.Name = $"Tableau_{i}";
-			newTableau.initialTableauSize= newTableau.initialTableauSize-i;
+
+			//Increasing tableau size from 1 to 7 in order to store initial deal. 
+			newTableau.initialTableauSize = i+1;
 			            
-            // Space each column by 100 pixels on the X axis (adjust as needed for your game)
+            // Space each column by X pixels on the X axis
             newTableau.Position = new Godot.Vector2(i * 150, 0); 
-            
-            AddChild(newTableau);
+
+			if (tableauContainer != null)
+			{
+				tableauContainer.AddChild(newTableau);
+			}
+			else
+			{
+				GD.PrintErr("TableauContainer not assigned in Deck Inspector. Falling back to Deck Position");
+				AddChild(newTableau);
+			}
+
             tableaus[i] = newTableau;
         }
 	}
 	
-	public void DealStartingBoard()
-	{
-		for (int col = 0; col <= 7; col++)
-		{
-			for(int row = 0; row <= col; row++)
-			{
-				if (drawPile.Count>0)
-				{
-					Card dealtCard = drawPile.Pop();
-				}
-			}
-		}
-
-		
-	}
 	private void InitializeAndShuffleDeck()
 	{
 		List<Card> tempDeckList = new List<Card>();
@@ -93,6 +93,26 @@ public partial class Deck : Node2D
 		{
 			drawPile.Push(card);
 		}
+		
+	}
+
+		public void DealStartingBoard()
+	{
+		for (int col = 0; col <= 7; col++)
+		{
+			CardTableau currentTableau = tableaus[col];
+
+			for(int row = 0; row <= currentTableau.initialTableauSize; row++)
+			{
+				if (drawPile.Count>0)
+				{
+					Card dealtCard = drawPile.Pop();
+					currentTableau.AddCardToTableau(dealtCard);
+				}
+			}
+		}
+
+		
 	}
 
 }
