@@ -143,6 +143,49 @@ public partial class CardManager : Node2D
 		return topCard;
 	}
 	
+	private Card GetTargetCardUnderMouse()
+	{
+		var spaceState = GetWorld2D().DirectSpaceState;
+		var parameters = new PhysicsPointQueryParameters2D();
+		parameters.Position = GetGlobalMousePosition();
+		parameters.CollideWithAreas = true;
+		parameters.CollisionMask = 1;
+
+		//Ignore card we are currently dragging
+		var draggedArea = selectedCard.GetNode<Area2D>("Area2D");
+		parameters.Exclude = new Godot.Collections.Array<Rid> {draggedArea.GetRid()};
+
+		var result = spaceState.IntersectPoint(parameters);
+
+		if (result.Count > 0)
+		{
+			//Reuse GetCard
+			Node2D topNode = GetCardWithHighestZIndex(result);
+
+			//Cast to Card Object to read Suit and Rank later
+			return topNode as Card;
+		}
+
+		return null; //Return if dropped into empty space.
+
+	}
+
+
+	private bool IsRed(CardSuit suit)
+	{
+		return suit == CardSuit.Hearts || suit == CardSuit.Diamonds;
+	}
+
+	private bool IsValidMove(Card draggedCard, Card targetCard)
+	{
+		//Check if suits are opposite
+		bool isDifferentColor = IsRed(draggedCard.Suit) != IsRed(targetCard.Suit);
+		//Check if target is exactly one rank higher than dragged card
+		bool isOneRankHigher = (int)targetCard.Rank == (int)draggedCard.Rank + 1;
+
+		return isDifferentColor && isOneRankHigher;
+	}
+
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
@@ -224,11 +267,40 @@ public partial class CardManager : Node2D
 			GD.Print("Error: StopDraggingCard called but no card is currently selected.");
 			return; // Exit the method if there is no selected card to stop dragging
 		}
-		Node2D cardSlotFound = RaycastCheckForCardSlot(); // Check if the card is being dropped over a valid card slot
+		//Reset Visual effects from dragging
 		selectedCard.Modulate = new Color(1, 1, 0.5f); // Reset the card's appearance when dropping
 		selectedCard.Scale = new Godot.Vector2(1.1f, 1.1f); // Reset the card's scale when dropping
-		if (cardSlotFound != null)
+
+		//Check if dropped card ontop of another card
+		Card targetCard = GetTargetCardUnderMouse();
+		//Check if dropped on an empty slot
+		Node2D cardSlotFound = RaycastCheckForCardSlot(); // Check if the card is being dropped over a valid card slot
+		
+		if (targetCard !=null)
 		{
+			GD.Print($"Dropped {selectedCard.Name} onto {targetCard.Name}");
+			//Solitaire Rule Check
+			if (IsValidMove(selectedCard as Card, targetCard))
+			{
+				GD.Print("Valid Move!");
+				//Logic to attach to new tableau here:
+
+
+				//Snap to the target card's position (plus offset to cascades down)
+				selectedCard.GlobalPosition = targetCard.GlobalPosition + new Godot.Vector2(0, 30);
+
+				//Logic to update Tableau arrays here:
+
+			}
+			else
+			{
+				GD.Print("Invalid Move. Returning card to original position...");
+				//Logic to Snap back to original position
+			}
+		}
+		else if (cardSlotFound != null)
+		{
+			//Hit an empty slot
 			GD.Print("Card dropped on slot: " + cardSlotFound.Name);
 			// Implement logic to snap the card to the slot's position or parent it to the slot
 			isDraggingCard = false; // Reset the dragging flag
@@ -250,6 +322,7 @@ public partial class CardManager : Node2D
 			// Implement logic to return the card to its original position or handle it as needed
 			isDraggingCard = false; // Reset the dragging flag
 		}
+		isDraggingCard = false;
 		selectedCard = null; // Clear the reference to the selected card
 	}
 

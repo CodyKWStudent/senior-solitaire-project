@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://d3s3srpl1b0ks"]
+
+[ext_resource type="Script" uid="uid://ijdg6e3ikhxk" path="res://Scenes/CardTableau.cs" id="1_1wdx1"]
+
+[node name="CardTableau" type="Node2D" unique_id=291260994]
+script = ExtResource("1_1wdx1")

@@ -1,0 +1,19 @@
+[gd_scene format=3 uid="uid://du5v47ot2mvbj"]
+
+[ext_resource type="Script" uid="uid://djxhaud2p3p4k" path="res://Scenes/Deck.cs" id="1_io7pv"]
+[ext_resource type="Texture2D" uid="uid://dwbxrf7tbtpkx" path="res://assets/cards/4x/CardBack.png" id="2_io7pv"]
+
+[sub_resource type="RectangleShape2D" id="RectangleShape2D_hqgur"]
+size = Vector2(180, 252)
+
+[node name="Deck" type="Node2D" unique_id=1592302419]
+script = ExtResource("1_io7pv")
+
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=847192328]
+scale = Vector2(0.5, 0.5)
+texture = ExtResource("2_io7pv")
+
+[node name="Area2D" type="Area2D" parent="." unique_id=1860034496]
+
+[node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=1499087668]
+shape = SubResource("RectangleShape2D_hqgur")
