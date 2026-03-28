@@ -14,6 +14,8 @@ public partial class CardManager : Node2D
 	public Signal cardExited; // Signal to indicate when the mouse exits a card area
 	Boolean isMouseOverCard = false; // Local variable to track if the mouse is currently over a card
 
+	private CardTableau originalTableau= null;
+
 
     public override void _UnhandledInput(InputEvent @event)
     {
@@ -238,13 +240,10 @@ public partial class CardManager : Node2D
 		if (highlight)
 		{
 			// Example: Change the card's modulate color to indicate it's highlighted
-			cardToHighlight.Modulate = new Color(1, 1, 0.5f); // Light yellow highlight
 			cardToHighlight.Scale = new Godot.Vector2(1.1f, 1.1f); // Slightly enlarge the card for emphasis
 		}
 		else
 		{
-			// Reset the card's modulate color to its original state
-			cardToHighlight.Modulate = new Color(1, 1, 1); // Original color (white)
 			cardToHighlight.Scale = new Godot.Vector2(1, 1); // Reset scale to original size
 		}
 
@@ -254,8 +253,10 @@ public partial class CardManager : Node2D
 	{
 		isDraggingCard = true; // Set the dragging flag to true
 		selectedCard = card; // Store a reference to the card being dragged
+
+		originalTableau = selectedCard.GetParent() as CardTableau;
+
 		// Optionally, you can add logic here to change the card's appearance while dragging (e.g., make it semi-transparent)
-		selectedCard.Modulate = new Color(1, 1, 1, 0.5f); // Make the card semi-transparent while dragging
 	    selectedCard.Scale = new Godot.Vector2(1,1); // Ensure the card is at its normal scale when dragging starts
 
 	}
@@ -268,8 +269,8 @@ public partial class CardManager : Node2D
 			return; // Exit the method if there is no selected card to stop dragging
 		}
 		//Reset Visual effects from dragging
-		selectedCard.Modulate = new Color(1, 1, 0.5f); // Reset the card's appearance when dropping
-		selectedCard.Scale = new Godot.Vector2(1.1f, 1.1f); // Reset the card's scale when dropping
+		
+		selectedCard.Scale = new Godot.Vector2(1.0f, 1.0f); // Reset the card's scale when dropping
 
 		//Check if dropped card ontop of another card
 		Card targetCard = GetTargetCardUnderMouse();
@@ -283,19 +284,23 @@ public partial class CardManager : Node2D
 			if (IsValidMove(selectedCard as Card, targetCard))
 			{
 				GD.Print("Valid Move!");
-				//Logic to attach to new tableau here:
+				//Get the specific tableau that the target card belongs to 
+				CardTableau targetTableau = targetCard.GetParent() as CardTableau;
 
+				if (targetTableau != null && originalTableau !=null)
+				{
+					//Remove from the old column
+					originalTableau.RemoveCardFromTableau(selectedCard as Card);
 
-				//Snap to the target card's position (plus offset to cascades down)
-				selectedCard.GlobalPosition = targetCard.GlobalPosition + new Godot.Vector2(0, 30);
-
-				//Logic to update Tableau arrays here:
-
+					//Add to the new column
+					targetTableau.AddCardToTableau(selectedCard as Card);
+				}
 			}
 			else
 			{
 				GD.Print("Invalid Move. Returning card to original position...");
-				//Logic to Snap back to original position
+				//Snap Back Logic: Original tableau to recalculate its layout
+				 originalTableau.UpdateCardTableau();
 			}
 		}
 		else if (cardSlotFound != null)
@@ -318,12 +323,16 @@ public partial class CardManager : Node2D
 		}
 		else
 		{
-			GD.Print("Card dropped outside of any slot.");
-			// Implement logic to return the card to its original position or handle it as needed
-			isDraggingCard = false; // Reset the dragging flag
+			GD.Print("Card dropped outside of any slot. Snapping Back.");
+			// Implement logic to return the card to its original position
+			if (originalTableau != null)
+                {
+                    originalTableau.UpdateCardTableau();
+                }
 		}
 		isDraggingCard = false;
 		selectedCard = null; // Clear the reference to the selected card
+		originalTableau = null; //Clear out memory for next drag.
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.

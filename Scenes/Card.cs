@@ -62,7 +62,7 @@ public partial class Card : Node2D
 		backTexture = GD.Load<Texture2D>("res://assets/cards/4x/CardBack.png");
 
 		// Dynamically load the correct texture based on the Suit and Rank
-		string texturepath = $"res://assets/cards/4x/{Suit}_{Rank}.png";
+		string texturepath = $"res://assets/cards/4x/{Suit}/{Suit}_{Rank}.png";
 		
 		
 		//Check if the file exists before load to prevent crashes

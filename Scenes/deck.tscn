@@ -4,7 +4,7 @@
 [ext_resource type="Texture2D" uid="uid://dwbxrf7tbtpkx" path="res://assets/cards/4x/CardBack.png" id="2_io7pv"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hqgur"]
-size = Vector2(180, 252)
+size = Vector2(146, 202)
 
 [node name="Deck" type="Node2D" unique_id=1592302419]
 script = ExtResource("1_io7pv")

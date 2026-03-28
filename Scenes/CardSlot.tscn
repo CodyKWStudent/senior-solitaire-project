@@ -3,7 +3,7 @@
 [ext_resource type="Texture2D" uid="uid://dys3ahqht0i28" path="res://assets/cards/4x/Spades/SpadeCardSlot.png" id="1_enycx"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_r3qn0"]
-size = Vector2(182, 252)
+size = Vector2(146, 202)
 
 [node name="CardSlot" type="Node2D" unique_id=1245913516]
 

@@ -82,4 +82,16 @@ public partial class CardTableau : Node2D
         
         // Optional: You could also add logic here to flip the card's sprite face-up or face-down!
     }
+	
+	public void RemoveCardFromTableau(Card card)
+	{
+		//If card is in list remove it
+		if (cardsInColumn.Contains(card))
+		{
+			cardsInColumn.Remove(card);
+			//Rerun update logic so the new bottom card becomes interactable
+			UpdateCardTableau();
+		}
+	}
+
 }
