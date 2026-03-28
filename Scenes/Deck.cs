@@ -15,6 +15,7 @@ public partial class Deck : Node2D
     
     PackedScene CARD_SCENE = (PackedScene)GD.Load("res://Scenes/Card.tscn");
     PackedScene TABLEAU_SCENE = (PackedScene)GD.Load("res://Scenes/CardTableau.tscn");
+	
 	[Export]
 	public Node2D tableauContainer;
 	
@@ -34,7 +35,7 @@ public partial class Deck : Node2D
 	public void GenerateTableaus()
 	{
 		//Programmatically create the 7 columns and space them out horizontally
-		for (int i = 1; i < 7; i++)
+		for (int i = 0; i < 7; i++)
         {
             CardTableau newTableau = TABLEAU_SCENE.Instantiate<CardTableau>();
             newTableau.Name = $"Tableau_{i}";
@@ -47,6 +48,7 @@ public partial class Deck : Node2D
 
 			if (tableauContainer != null)
 			{
+				
 				tableauContainer.AddChild(newTableau);
 			}
 			else
@@ -96,23 +98,23 @@ public partial class Deck : Node2D
 		
 	}
 
-		public void DealStartingBoard()
+	public void DealStartingBoard()
 	{
-		for (int col = 0; col <= 7; col++)
+		for (int col = 0; col < 7; col++)
 		{
 			CardTableau currentTableau = tableaus[col];
 
-			for(int row = 0; row <= currentTableau.initialTableauSize; row++)
+			for(int row = 0; row < currentTableau.initialTableauSize; row++)
 			{
+				
 				if (drawPile.Count>0)
 				{
 					Card dealtCard = drawPile.Pop();
+					dealtCard.Flip(true);
 					currentTableau.AddCardToTableau(dealtCard);
 				}
 			}
-		}
-
-		
+		}	
 	}
 
 }

@@ -31,11 +31,6 @@ public partial class Card : Node2D
 	public override void _Ready()
 	{
 		cardArea = GetNode<Area2D>("Area2D");
-		//Grab Sprite
-		cardSprite = GetNode<Sprite2D>("Sprite2D");
-		//Load Card Back Texture
-		backTexture = GD.Load<Texture2D>("res://assets/cards/4x/CardBack.png");
-
 		cardArea.MouseEntered += () =>
 		{
 			GD.Print("Mouse entered " + Name + "'s area!");
@@ -61,15 +56,22 @@ public partial class Card : Node2D
 		Suit = suit;
 		Rank = rank;
 		Name = $"{Suit}_{Rank}";
+		//Grab Sprite
+		cardSprite = GetNode<Sprite2D>("Sprite2D");
+		//Load Card Back Texture
+		backTexture = GD.Load<Texture2D>("res://assets/cards/4x/CardBack.png");
 
 		// Dynamically load the correct texture based on the Suit and Rank
 		string texturepath = $"res://assets/cards/4x/{Suit}_{Rank}.png";
+		
+		
 		//Check if the file exists before load to prevent crashes
 		if (ResourceLoader.Exists(texturepath))
 		{
 			
 			faceTexture = GD.Load<Texture2D>(texturepath);
-			GD.Print(Name);
+			
+			
 		}
 		else
 		{
@@ -87,6 +89,7 @@ public partial class Card : Node2D
 		//Swap sprite texture depending on face-up state
 		if (cardSprite != null)
 		{
+			
 			cardSprite.Texture = IsFaceUp ? faceTexture : backTexture;
 		}
 	}

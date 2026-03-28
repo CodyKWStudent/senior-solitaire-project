@@ -32,8 +32,9 @@ script = ExtResource("1_bo1nx")
 
 [node name="InputManager" type="Node2D" parent="." unique_id=1891106296]
 
-[node name="Deck" parent="." unique_id=1592302419 instance=ExtResource("8_344ge")]
+[node name="Deck" parent="." unique_id=1592302419 node_paths=PackedStringArray("tableauContainer") instance=ExtResource("8_344ge")]
 position = Vector2(942, 134)
+tableauContainer = NodePath("../TableauContainer")
 
 [node name="TableauContainer" type="Node2D" parent="." unique_id=2096771345]
 position = Vector2(65, 387)
