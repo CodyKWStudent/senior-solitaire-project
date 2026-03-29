@@ -15,14 +15,20 @@ public partial class Deck : Node2D
     
     PackedScene CARD_SCENE = (PackedScene)GD.Load("res://Scenes/Card.tscn");
     PackedScene TABLEAU_SCENE = (PackedScene)GD.Load("res://Scenes/CardTableau.tscn");
+
+	PackedScene CARDSLOT_SCENE = (PackedScene)GD.Load("res://Scenes/CardSlot.cs");
 	
 	[Export]
 	public Node2D tableauContainer;
+
+	[Export]
+	public Node2D foundationSlotContainer;
 	
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
 		GenerateTableaus();
+		GenerateFoundations();
 		InitializeAndShuffleDeck();
 		DealStartingBoard();
 	}
@@ -60,6 +66,33 @@ public partial class Deck : Node2D
             tableaus[i] = newTableau;
         }
 	}
+
+	private void GenerateFoundations()
+	{
+		int index = 0;
+		//Loop thorugh the 4 suits 
+		foreach (CardSuit suit in Enum.GetValues(typeof(CardSuit)))
+		{
+			CardSlot newCardSlot = CARDSLOT_SCENE.Instantiate<CardSlot>();
+			newCardSlot.Name = $"Foundation{suit}";
+			newCardSlot.Position = new Godot.Vector2(index * 150, 0);
+
+			//Tell the slot it is a Foundation slot and assign its specific suit
+			newCardSlot.InitializeCardSlot(SlotType.Foundation, suit);
+
+			if(foundationSlotContainer != null)
+			{
+				foundationSlotContainer.AddChild(newCardSlot);
+			}
+			else
+			{
+				GD.PrintErr("FoundationsSlotContainer not assigned. Falling Back to Deck");
+				AddChild(newCardSlot);
+			}
+			index++;
+		}
+	}
+
 	
 	private void InitializeAndShuffleDeck()
 	{

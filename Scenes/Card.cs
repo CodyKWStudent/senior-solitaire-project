@@ -62,20 +62,20 @@ public partial class Card : Node2D
 		backTexture = GD.Load<Texture2D>("res://assets/cards/4x/CardBack.png");
 
 		// Dynamically load the correct texture based on the Suit and Rank
-		string texturepath = $"res://assets/cards/4x/{Suit}/{Suit}_{Rank}.png";
+		string texturePath = $"res://assets/cards/4x/{Suit}/{Suit}_{Rank}.png";
 		
 		
 		//Check if the file exists before load to prevent crashes
-		if (ResourceLoader.Exists(texturepath))
+		if (ResourceLoader.Exists(texturePath))
 		{
 			
-			faceTexture = GD.Load<Texture2D>(texturepath);
+			faceTexture = GD.Load<Texture2D>(texturePath);
 			
 			
 		}
 		else
 		{
-			GD.PrintErr($"Missing texture for {Name} at path: {texturepath}");
+			GD.PrintErr($"Missing texture for {Name} at path: {texturePath}");
 		}
 		UpdateVisuals();
 	}

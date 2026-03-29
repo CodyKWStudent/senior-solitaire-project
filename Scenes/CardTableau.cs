@@ -94,4 +94,9 @@ public partial class CardTableau : Node2D
 		}
 	}
 
+	public bool IsEmpty()
+	{
+		return cardsInColumn.Count ==0;
+	}
+
 }

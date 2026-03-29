@@ -25,3 +25,5 @@ position = Vector2(79, 512)
 
 [node name="CardSlotContainer" type="Node2D" parent="." unique_id=1538794908]
 position = Vector2(46, 15)
+
+[node name="FoundationSlotContainer" type="Node2D" parent="." unique_id=1852641002]

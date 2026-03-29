@@ -8,7 +8,7 @@ public partial class CardManager : Node2D
 {
 	Godot.Vector2 screenSize = Godot.Vector2.Zero; // Get the size of the viewport for boundary checks
 	Boolean isDraggingCard = false; // Local variable to track if a card is being dragged
-	Node2D selectedCard = null; // Reference to the card being clicked
+	private Card selectedCard = null; // Reference to the card being clicked
 	Node2D cardNode; // Reference to the parent node containing all card nodes
 	public Signal cardEntered; // Signal to indicate when the mouse enters a card area
 	public Signal cardExited; // Signal to indicate when the mouse exits a card area
@@ -72,13 +72,13 @@ public partial class CardManager : Node2D
 		if (result.Count > 0)
 		{	
 			//Explicitly cast the first result to a Godot Dictionary
-			selectedCard = GetCardWithHighestZIndex(result); // Get the card with the highest Z-index from the raycast results
-
+			Node2D topNode = GetCardWithHighestZIndex(result); // Get the card with the highest Z-index from the raycast results
+			selectedCard = topNode as Card;
 			
 			if (selectedCard != null)			{
 				GD.Print("Top Card Clicked: " + selectedCard.Name);
 				// Set the selected card reference to the collider's parent (assuming the card is the parent of the Area2D)
-				
+				StartDraggingCard(selectedCard);
 			}
 			
 		}
@@ -249,7 +249,7 @@ public partial class CardManager : Node2D
 
 	}
 
-	private void StartDraggingCard(Node2D card)
+	private void StartDraggingCard(Card card)
 	{
 		isDraggingCard = true; // Set the dragging flag to true
 		selectedCard = card; // Store a reference to the card being dragged
@@ -277,6 +277,7 @@ public partial class CardManager : Node2D
 		//Check if dropped on an empty slot
 		Node2D cardSlotFound = RaycastCheckForCardSlot(); // Check if the card is being dropped over a valid card slot
 		
+		//Did we drop on another Card?
 		if (targetCard !=null)
 		{
 			GD.Print($"Dropped {selectedCard.Name} onto {targetCard.Name}");
@@ -291,7 +292,6 @@ public partial class CardManager : Node2D
 				{
 					//Remove from the old column
 					originalTableau.RemoveCardFromTableau(selectedCard as Card);
-
 					//Add to the new column
 					targetTableau.AddCardToTableau(selectedCard as Card);
 				}
@@ -300,26 +300,31 @@ public partial class CardManager : Node2D
 			{
 				GD.Print("Invalid Move. Returning card to original position...");
 				//Snap Back Logic: Original tableau to recalculate its layout
-				 originalTableau.UpdateCardTableau();
+				 if (originalTableau != null)originalTableau.UpdateCardTableau();
 			}
 		}
+		//Did we drop it on an empty space/slot?
 		else if (cardSlotFound != null)
 		{
-			//Hit an empty slot
-			GD.Print("Card dropped on slot: " + cardSlotFound.Name);
-			// Implement logic to snap the card to the slot's position or parent it to the slot
-			isDraggingCard = false; // Reset the dragging flag
+			//Check if the slot belongs to the CardTableau
+			CardTableau emptyTableau = cardSlotFound.GetParent() as CardTableau;
 
-			selectedCard.GlobalPosition = cardSlotFound.GlobalPosition; // Snap the card to the center of the slot
-			selectedCard.GetNode<Area2D>("Area2D").GetChild<CollisionShape2D>(0).Disabled=true;// Disable the card's collision shape to prevent further interactions while it's in the slot	
-			//selectedCard.GetNode<Area2D>("Area2D").CollisionLayer = 0; // Disable the card's collision layer to prevent further interactions while it's in the slot
-			CardSlot slotScript = cardSlotFound as CardSlot;
-			
-			if (slotScript != null)
+			if (emptyTableau != null && emptyTableau.IsEmpty())
 			{
-				GD.Print("Card slot script found on " + cardSlotFound.Name);
-				slotScript.cardInSlot = true; // Set the cardInSlot variable in the CardSlot script to true to indicate that a card is now in the slot
-			}	
+				GD.Print("Card dropped on an empty Tableau column");
+				//Transfer the card over to the FreeCell
+				if (originalTableau !=null)
+				{
+					originalTableau.RemoveCardFromTableau(selectedCard);
+				}
+				emptyTableau.AddCardToTableau(selectedCard);
+			}
+			else
+			{
+				//Logic if it was a Foundation slot or FreeCell
+				GD.Print("Dropped on a differnt kind of slot.");
+				if (originalTableau !=null)originalTableau.UpdateCardTableau();
+			}
 		}
 		else
 		{
