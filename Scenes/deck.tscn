@@ -1,6 +1,6 @@
 [gd_scene format=3 uid="uid://du5v47ot2mvbj"]
 
-[ext_resource type="Script" uid="uid://djxhaud2p3p4k" path="res://Scenes/Deck.cs" id="1_io7pv"]
+[ext_resource type="Script" uid="uid://djxhaud2p3p4k" path="res://Scripts/Deck.cs" id="1_io7pv"]
 [ext_resource type="Texture2D" uid="uid://dwbxrf7tbtpkx" path="res://assets/cards/4x/CardBack.png" id="2_io7pv"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_hqgur"]

@@ -1,11 +1,14 @@
 [gd_scene format=3 uid="uid://qchianuji45o"]
 
+[ext_resource type="Script" uid="uid://brtvgc5hb85p3" path="res://Scripts/CardSlot.cs" id="1_enycx"]
+
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_r3qn0"]
 size = Vector2(146, 202)
 
 [node name="CardSlot" type="Node2D" unique_id=1245913516]
+script = ExtResource("1_enycx")
 
-[node name="Sprite2D" type="Sprite2D" parent="." unique_id=133899182]
+[node name="Sprite2D" type="Sprite2D" parent="." unique_id=1108291583]
 scale = Vector2(0.5, 0.5)
 
 [node name="Area2D" type="Area2D" parent="." unique_id=131575168]

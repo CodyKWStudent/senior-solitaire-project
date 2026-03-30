@@ -22,15 +22,7 @@ public partial class CardTableau : Node2D
 	
 	public override void _Ready()
 	{
-		//At start of scene create cards and add them to tableau	
-		/*
-		for (int i = 0; i < initialTableauSize; i++)
-		{
-			Card card = CARD_SCENE_PATH.Instantiate<Card>();
-			card.Name = $"Card_{i}";
-			AddCardToTableau(card);			
-		} 
-		*/
+		
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -82,6 +74,24 @@ public partial class CardTableau : Node2D
         
         // Optional: You could also add logic here to flip the card's sprite face-up or face-down!
     }
+
+	public List<Card> GetCardsFrom(Card clickedCard)
+	{
+		List<Card> draggedStack = new List<Card>();
+		int startIndex = cardsInColumn.IndexOf(clickedCard);
+
+		if(startIndex != -1)
+		{
+			//Grab the clicked card and everything after it
+			for (int i = startIndex; i < cardsInColumn.Count; i++)
+			{
+				draggedStack.Add(cardsInColumn[i]);
+			}
+		}
+		return draggedStack;
+	}
+
+
 	
 	public void RemoveCardFromTableau(Card card)
 	{

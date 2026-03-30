@@ -19,8 +19,8 @@ public partial class CardSlot : Node2D
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
-		GD.Print(this.GetChild<Area2D>(0).CollisionMask);	
-		slotSprite = GetNode<Sprite2D>("Sprite2D");
+	
+		
 
 	}
 
@@ -29,15 +29,16 @@ public partial class CardSlot : Node2D
 	{
 	}
 
-	public void InitializeCardSlot (SlotType type, CardSuit suit = CardSuit.Hearts)
+	public void InitializeCardSlot (SlotType type, CardSuit suit)
 	{
 		slotType = type;
 		targetSuit = suit;
+		slotSprite = GetNode<Sprite2D>("Sprite2D");
 		
 		string texturePath = "";
 		if (slotType == SlotType.Foundation)
 		{
-			texturePath = $"res://assets/cards/{suit}/{suit}_CardSlot.png";
+			texturePath = $"res://assets/cards/4x/{suit}/{suit}_CardSlot.png";
 		}
 		else
 		{

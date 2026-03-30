@@ -16,7 +16,7 @@ public partial class Deck : Node2D
     PackedScene CARD_SCENE = (PackedScene)GD.Load("res://Scenes/Card.tscn");
     PackedScene TABLEAU_SCENE = (PackedScene)GD.Load("res://Scenes/CardTableau.tscn");
 
-	PackedScene CARDSLOT_SCENE = (PackedScene)GD.Load("res://Scenes/CardSlot.cs");
+	PackedScene CARDSLOT_SCENE = (PackedScene)GD.Load("res://Scenes/CardSlot.tscn");
 	
 	[Export]
 	public Node2D tableauContainer;
@@ -74,8 +74,8 @@ public partial class Deck : Node2D
 		foreach (CardSuit suit in Enum.GetValues(typeof(CardSuit)))
 		{
 			CardSlot newCardSlot = CARDSLOT_SCENE.Instantiate<CardSlot>();
-			newCardSlot.Name = $"Foundation{suit}";
-			newCardSlot.Position = new Godot.Vector2(index * 150, 0);
+			newCardSlot.Name = $"Foundation_{suit}";
+			newCardSlot.Position = new Godot.Vector2(index * 200, 0);
 
 			//Tell the slot it is a Foundation slot and assign its specific suit
 			newCardSlot.InitializeCardSlot(SlotType.Foundation, suit);
@@ -83,6 +83,7 @@ public partial class Deck : Node2D
 			if(foundationSlotContainer != null)
 			{
 				foundationSlotContainer.AddChild(newCardSlot);
+				GD.Print($"Added {newCardSlot.Name} to the foundation container");
 			}
 			else
 			{

@@ -1,6 +1,7 @@
 using Godot;
 using Godot.Collections;
 using System;
+using System.Collections.Generic;
 using System.Numerics;
 using System.Reflection.Metadata;
 
@@ -8,7 +9,8 @@ public partial class CardManager : Node2D
 {
 	Godot.Vector2 screenSize = Godot.Vector2.Zero; // Get the size of the viewport for boundary checks
 	Boolean isDraggingCard = false; // Local variable to track if a card is being dragged
-	private Card selectedCard = null; // Reference to the card being clicked
+	private Card rootDraggedCard = null; // Reference to the card being clicked
+	private List<Card> draggedCards = new List<Card>(); //The whole stack being moved. 
 	Node2D cardNode; // Reference to the parent node containing all card nodes
 	public Signal cardEntered; // Signal to indicate when the mouse enters a card area
 	public Signal cardExited; // Signal to indicate when the mouse exits a card area
@@ -30,9 +32,9 @@ public partial class CardManager : Node2D
 					GD.Print("Left Button Pressed");
 					// Perform a raycast at the mouse position to check for card interaction
 					RaycastCheckForCard();
-					if (selectedCard != null)
+					if (rootDraggedCard != null)
 					{
-						StartDraggingCard(selectedCard); // Start dragging the card if one was selected
+						StartDraggingCard(rootDraggedCard); // Start dragging the card if one was selected
 					}
 				}
 				else
@@ -73,18 +75,18 @@ public partial class CardManager : Node2D
 		{	
 			//Explicitly cast the first result to a Godot Dictionary
 			Node2D topNode = GetCardWithHighestZIndex(result); // Get the card with the highest Z-index from the raycast results
-			selectedCard = topNode as Card;
+			rootDraggedCard = topNode as Card;
 			
-			if (selectedCard != null)			{
-				GD.Print("Top Card Clicked: " + selectedCard.Name);
+			if (rootDraggedCard != null)			{
+				GD.Print("Top Card Clicked: " + rootDraggedCard.Name);
 				// Set the selected card reference to the collider's parent (assuming the card is the parent of the Area2D)
-				StartDraggingCard(selectedCard);
+				StartDraggingCard(rootDraggedCard);
 			}
 			
 		}
 		else{
 			GD.Print("No card detected at mouse position.");
-			selectedCard = null; // Clear the selected card reference if no card was detected
+			rootDraggedCard = null; // Clear the selected card reference if no card was detected
 		}
 		
 	}
@@ -154,7 +156,7 @@ public partial class CardManager : Node2D
 		parameters.CollisionMask = 1;
 
 		//Ignore card we are currently dragging
-		var draggedArea = selectedCard.GetNode<Area2D>("Area2D");
+		var draggedArea = rootDraggedCard.GetNode<Area2D>("Area2D");
 		parameters.Exclude = new Godot.Collections.Array<Rid> {draggedArea.GetRid()};
 
 		var result = spaceState.IntersectPoint(parameters);
@@ -223,9 +225,9 @@ public partial class CardManager : Node2D
 		HighlightCard(exitedCard, false);
 		//Check if hovered off card straight onto another card
 		RaycastCheckForCard();
-		if (selectedCard != null)
+		if (rootDraggedCard != null)
 		{
-			HighlightCard(selectedCard, true); // Highlight the new card that is now being hovered
+			HighlightCard(rootDraggedCard, true); // Highlight the new card that is now being hovered
 		}
 		else
 		{
@@ -252,25 +254,40 @@ public partial class CardManager : Node2D
 	private void StartDraggingCard(Card card)
 	{
 		isDraggingCard = true; // Set the dragging flag to true
-		selectedCard = card; // Store a reference to the card being dragged
+		rootDraggedCard = card; // Store a reference to the card being dragged
 
-		originalTableau = selectedCard.GetParent() as CardTableau;
+		originalTableau = rootDraggedCard.GetParent() as CardTableau;
 
-		// Optionally, you can add logic here to change the card's appearance while dragging (e.g., make it semi-transparent)
-	    selectedCard.Scale = new Godot.Vector2(1,1); // Ensure the card is at its normal scale when dragging starts
+		if (originalTableau != null)
+		{
+			// Drag the whole stack
+			draggedCards = originalTableau.GetCardsFrom(rootDraggedCard);
+			//Optional make them all transparent and pop to the front
+			foreach(Card c in draggedCards)
+			{
+				c.Modulate = new Color (1,1,1, 0.5f);
+				c.ZIndex += 100; //Force them to draw oever everything else while dragging. 
+			}
+		}
+
+
+		
 
 	}
 
 	private void StopDraggingCard()
 	{
-		if (selectedCard == null)
+		if (rootDraggedCard == null)
 		{
 			GD.Print("Error: StopDraggingCard called but no card is currently selected.");
 			return; // Exit the method if there is no selected card to stop dragging
 		}
 		//Reset Visual effects from dragging
 		
-		selectedCard.Scale = new Godot.Vector2(1.0f, 1.0f); // Reset the card's scale when dropping
+		foreach (Card c in draggedCards)
+		{
+			c.Modulate = new Color (1,1,1,1);
+		}
 
 		//Check if dropped card ontop of another card
 		Card targetCard = GetTargetCardUnderMouse();
@@ -280,9 +297,9 @@ public partial class CardManager : Node2D
 		//Did we drop on another Card?
 		if (targetCard !=null)
 		{
-			GD.Print($"Dropped {selectedCard.Name} onto {targetCard.Name}");
+			GD.Print($"Dropped {rootDraggedCard.Name} onto {targetCard.Name}");
 			//Solitaire Rule Check
-			if (IsValidMove(selectedCard as Card, targetCard))
+			if (IsValidMove(rootDraggedCard as Card, targetCard))
 			{
 				GD.Print("Valid Move!");
 				//Get the specific tableau that the target card belongs to 
@@ -290,10 +307,13 @@ public partial class CardManager : Node2D
 
 				if (targetTableau != null && originalTableau !=null)
 				{
-					//Remove from the old column
-					originalTableau.RemoveCardFromTableau(selectedCard as Card);
-					//Add to the new column
-					targetTableau.AddCardToTableau(selectedCard as Card);
+					foreach (Card c in draggedCards)
+					{
+						//Remove from the old column
+						originalTableau.RemoveCardFromTableau(c as Card);
+						//Add to the new column
+						targetTableau.AddCardToTableau(c as Card);
+					}
 				}
 			}
 			else
@@ -315,9 +335,9 @@ public partial class CardManager : Node2D
 				//Transfer the card over to the FreeCell
 				if (originalTableau !=null)
 				{
-					originalTableau.RemoveCardFromTableau(selectedCard);
+					originalTableau.RemoveCardFromTableau(rootDraggedCard);
 				}
-				emptyTableau.AddCardToTableau(selectedCard);
+				emptyTableau.AddCardToTableau(rootDraggedCard);
 			}
 			else
 			{
@@ -336,19 +356,26 @@ public partial class CardManager : Node2D
                 }
 		}
 		isDraggingCard = false;
-		selectedCard = null; // Clear the reference to the selected card
+		rootDraggedCard = null; // Clear the reference to the selected card
 		originalTableau = null; //Clear out memory for next drag.
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(double delta)
 	{
-		if (isDraggingCard)
+		if (isDraggingCard && rootDraggedCard != null)
 		{
 			
-			// Update card position to follow the mouse cursor
+			// Move the root card to the mouse
 			var mousePosition = GetGlobalMousePosition();
-			selectedCard.GlobalPosition = mousePosition.Clamp(Godot.Vector2.Zero, screenSize); // Clamp the position to stay within the screen bounds
+			rootDraggedCard.GlobalPosition = mousePosition.Clamp(Godot.Vector2.Zero, screenSize); // Clamp the position to stay within the screen bounds
+
+			// Move the rest of the stack relative to the root card.
+			for (int i = 1; i < draggedCards.Count; i++)
+			{
+				Card trailingCard = draggedCards[i];
+				trailingCard.GlobalPosition = rootDraggedCard.GlobalPosition + new Godot.Vector2(0, i * 30);
+			}
 		}
 	}
 }
