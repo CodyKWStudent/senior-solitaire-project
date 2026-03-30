@@ -13,7 +13,7 @@ script = ExtResource("1_bo1nx")
 [node name="InputManager" type="Node2D" parent="." unique_id=1891106296]
 
 [node name="Deck" parent="." unique_id=1592302419 node_paths=PackedStringArray("tableauContainer", "foundationSlotContainer") instance=ExtResource("8_344ge")]
-position = Vector2(79, 297)
+position = Vector2(79, 345)
 tableauContainer = NodePath("../TableauContainer")
 foundationSlotContainer = NodePath("../FoundationSlotContainer")
 
@@ -21,4 +21,4 @@ foundationSlotContainer = NodePath("../FoundationSlotContainer")
 position = Vector2(79, 576)
 
 [node name="FoundationSlotContainer" type="Node2D" parent="." unique_id=1852641002]
-position = Vector2(64, 64)
+position = Vector2(383, 125)

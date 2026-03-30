@@ -16,7 +16,8 @@ public partial class CardManager : Node2D
 	public Signal cardExited; // Signal to indicate when the mouse exits a card area
 	Boolean isMouseOverCard = false; // Local variable to track if the mouse is currently over a card
 
-	private CardTableau originalTableau= null;
+	private CardTableau originalTableau = null;
+	private CardSlot originalSlot = null;
 
 
     public override void _UnhandledInput(InputEvent @event)
@@ -77,10 +78,27 @@ public partial class CardManager : Node2D
 			Node2D topNode = GetCardWithHighestZIndex(result); // Get the card with the highest Z-index from the raycast results
 			rootDraggedCard = topNode as Card;
 			
-			if (rootDraggedCard != null)			{
-				GD.Print("Top Card Clicked: " + rootDraggedCard.Name);
-				// Set the selected card reference to the collider's parent (assuming the card is the parent of the Area2D)
-				StartDraggingCard(rootDraggedCard);
+			if (rootDraggedCard != null)			
+			{
+				//Grab the tableau this card belongs to
+				originalTableau = rootDraggedCard.GetParent() as CardTableau;
+				if (originalTableau != null && originalTableau.IsStackValid(rootDraggedCard))
+				{
+					GD.Print("Valid Stack Clicked: "+ rootDraggedCard.Name);
+					StartDraggingCard(rootDraggedCard);
+				}
+				else if (originalSlot !=null)
+				{
+					GD.Print("Valid Card From Slot Clicked: "+ rootDraggedCard.Name);
+					StartDraggingCard(rootDraggedCard);
+				} 
+				else
+				{
+					GD.Print("Invalid Sequence. Cannot drag this sub-stack.");
+					//Reject the drag by clearing reference
+					rootDraggedCard = null;
+					//**FOR LATER** Add Error shake here:
+				}
 			}
 			
 		}
@@ -88,7 +106,7 @@ public partial class CardManager : Node2D
 			GD.Print("No card detected at mouse position.");
 			rootDraggedCard = null; // Clear the selected card reference if no card was detected
 		}
-		
+	
 	}
 
 	private Node2D RaycastCheckForCardSlot()
@@ -109,12 +127,7 @@ public partial class CardManager : Node2D
 		{	
 			var hitData = (Godot.Collections.Dictionary)result[0]; // Explicitly cast the first result to a Godot Dictionary
 			var collider = hitData["collider"].As<Node2D>(); // Get the collider from the hit data
-
-			if (collider != null)
-			{
-				GD.Print("Card Slot Detected: " + collider.Name);
-				return collider; // Return the detected card slot
-			}
+			return collider.GetParent() as CardSlot;
 			
 		}
 		
@@ -175,7 +188,7 @@ public partial class CardManager : Node2D
 	}
 
 
-	private bool IsRed(CardSuit suit)
+	public bool IsRed(CardSuit suit)
 	{
 		return suit == CardSuit.Hearts || suit == CardSuit.Diamonds;
 	}
@@ -269,10 +282,12 @@ public partial class CardManager : Node2D
 				c.ZIndex += 100; //Force them to draw oever everything else while dragging. 
 			}
 		}
-
-
-		
-
+		else if (originalSlot != null)
+		{
+			draggedCards = new List<Card> {rootDraggedCard};
+			rootDraggedCard.Modulate = new Color (1,1,1, 0.5f);
+			rootDraggedCard.ZIndex += 100;
+		}		
 	}
 
 	private void StopDraggingCard()
@@ -294,7 +309,7 @@ public partial class CardManager : Node2D
 		//Check if dropped on an empty slot
 		Node2D cardSlotFound = RaycastCheckForCardSlot(); // Check if the card is being dropped over a valid card slot
 		
-		//Did we drop on another Card?
+		//--- SCENARIO 1: Dropped on another Card ---
 		if (targetCard !=null)
 		{
 			GD.Print($"Dropped {rootDraggedCard.Name} onto {targetCard.Name}");
@@ -305,14 +320,25 @@ public partial class CardManager : Node2D
 				//Get the specific tableau that the target card belongs to 
 				CardTableau targetTableau = targetCard.GetParent() as CardTableau;
 
-				if (targetTableau != null && originalTableau !=null)
+				if (targetTableau != null)
 				{
-					foreach (Card c in draggedCards)
+					//Check if it came from a tableau
+					if (originalTableau != null)
+					{			
+						foreach (Card c in draggedCards)
+						{
+							//Remove from the old column
+							originalTableau.RemoveCardFromTableau(c as Card);
+							//Add to the new column
+							targetTableau.AddCardToTableau(c as Card);
+						}
+					}
+				
+					//Check if it came from a Foundation
+					else if (originalSlot !=null)
 					{
-						//Remove from the old column
-						originalTableau.RemoveCardFromTableau(c as Card);
-						//Add to the new column
-						targetTableau.AddCardToTableau(c as Card);
+						originalSlot.RemoveCard(rootDraggedCard);
+						targetTableau.AddCardToTableau(rootDraggedCard);
 					}
 				}
 			}
@@ -321,43 +347,76 @@ public partial class CardManager : Node2D
 				GD.Print("Invalid Move. Returning card to original position...");
 				//Snap Back Logic: Original tableau to recalculate its layout
 				 if (originalTableau != null)originalTableau.UpdateCardTableau();
+				 else if (originalSlot != null) rootDraggedCard.Position = Godot.Vector2.Zero;
 			}
 		}
-		//Did we drop it on an empty space/slot?
+		// --- SCENARIO 2: Dropped on an empty space/slot ---
 		else if (cardSlotFound != null)
 		{
 			//Check if the slot belongs to the CardTableau
 			CardTableau emptyTableau = cardSlotFound.GetParent() as CardTableau;
-
+			CardSlot validSlot = cardSlotFound as CardSlot;
+			
 			if (emptyTableau != null && emptyTableau.IsEmpty())
 			{
 				GD.Print("Card dropped on an empty Tableau column");
 				//Transfer the card over to the FreeCell
 				if (originalTableau !=null)
 				{
-					originalTableau.RemoveCardFromTableau(rootDraggedCard);
+					foreach(Card c in draggedCards)
+					{
+
+						originalTableau.RemoveCardFromTableau(c);
+						emptyTableau.AddCardToTableau(c);
+					}
 				}
-				emptyTableau.AddCardToTableau(rootDraggedCard);
+				else if (originalSlot != null)
+				{
+					originalSlot.RemoveCard(rootDraggedCard);
+					emptyTableau.AddCardToTableau(rootDraggedCard);
+				}
 			}
-			else
+			else if (validSlot != null)
 			{
-				//Logic if it was a Foundation slot or FreeCell
-				GD.Print("Dropped on a differnt kind of slot.");
-				if (originalTableau !=null)originalTableau.UpdateCardTableau();
+				//It's a Foundation Slot 
+				GD.Print($"Dropped on Slot: {validSlot.Name}");
+				if (draggedCards.Count > 1 )
+				{
+					GD.Print("Cannot drop multiple cards onto a Foundation");
+					if (originalTableau !=null)originalTableau.UpdateCardTableau();
+					else if(originalSlot !=null) rootDraggedCard.Position = Godot.Vector2.Zero;
+				}
+				else if (validSlot.IsValidDrop(rootDraggedCard))
+				{
+					// Safely remove it from wherever it came from
+                    if (originalTableau != null) originalTableau.RemoveCardFromTableau(rootDraggedCard);
+                    else if (originalSlot != null) originalSlot.RemoveCard(rootDraggedCard);
+
+                    validSlot.AddCard(rootDraggedCard);
+				}
+				else
+				{
+					GD.Print("Invalid Slot Drop. Snapping Back.");
+					if (originalTableau != null) originalTableau.UpdateCardTableau();
+                    else if (originalSlot != null) rootDraggedCard.Position = Godot.Vector2.Zero;
+				}
+				
 			}
 		}
+		// --- SCENARIO 3: Dropped outside of anything ---
 		else
 		{
 			GD.Print("Card dropped outside of any slot. Snapping Back.");
-			// Implement logic to return the card to its original position
-			if (originalTableau != null)
-                {
-                    originalTableau.UpdateCardTableau();
-                }
+			
+			if (originalTableau != null) originalTableau.UpdateCardTableau();
+            else if (originalSlot != null) rootDraggedCard.Position = Godot.Vector2.Zero;
+			
 		}
 		isDraggingCard = false;
 		rootDraggedCard = null; // Clear the reference to the selected card
 		originalTableau = null; //Clear out memory for next drag.
+		originalSlot = null;
+		draggedCards.Clear();
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.

@@ -57,8 +57,7 @@ public partial class CardTableau : Node2D
             currentCard.ZIndex = i;
 
             // Determine Interactability: Only the LAST card in the list can be clicked
-            bool isLastCard = (i == cardsInColumn.Count - 1);
-            SetCardInteractable(currentCard, isLastCard);
+            SetCardInteractable(currentCard, true);
         }
 	}
 	private void SetCardInteractable(Card card, bool isInteractable)
@@ -102,6 +101,39 @@ public partial class CardTableau : Node2D
 			//Rerun update logic so the new bottom card becomes interactable
 			UpdateCardTableau();
 		}
+	}
+
+	public bool IsStackValid(Card clickedCard)
+	{
+		int startIndex = cardsInColumn.IndexOf(clickedCard);
+		//Safety check
+		if (startIndex == -1) return false;
+		
+		//If ver last card in the column it's always valid to pick up
+		if (startIndex == cardsInColumn.Count - 1) return true;
+
+		//Loop through the stack starting from clicked card
+		for (int i = startIndex; i < cardsInColumn.Count - 1; i++)
+		{
+			Card currentCard = cardsInColumn[i];
+			Card cardBelowIt = cardsInColumn[i + 1];
+
+			//Null check
+			if(currentCard == null || cardBelowIt == null) return false;
+
+			//Solitaire Rules: The card below must be opposite color and exactly 1 rank lower
+			bool isDifferentColor = cardManager.IsRed(currentCard.Suit) != cardManager.IsRed(cardBelowIt.Suit);
+            bool isOneRankLower = (int)cardBelowIt.Rank == (int)currentCard.Rank - 1;
+
+			if (!isDifferentColor || !isOneRankLower)
+			{
+				//Sequence broken do not grab stack.
+				return false;
+			}
+
+		}
+		//Finishing then sequence is true and return true.
+		return true;
 	}
 
 	public bool IsEmpty()

@@ -79,6 +79,7 @@ public partial class CardSlot : Node2D
 	public void AddCard(Card card)
 	{
 	// Hide the current top card before adding the new one
+		
         if (stackedCards.Count > 0)
         {
             Card currentTop = stackedCards[stackedCards.Count - 1];
@@ -93,6 +94,7 @@ public partial class CardSlot : Node2D
         if (card.GetParent() != null) card.GetParent().RemoveChild(card);
         AddChild(card);
         card.Position = Vector2.Zero; // Center exactly on the slot
+		if (slotSprite !=null) slotSprite.Visible = false;
 
         // Check for King to emit win signal!
         if (slotType == SlotType.Foundation && card.Rank == CardRank.King)
@@ -113,6 +115,10 @@ public partial class CardSlot : Node2D
                 newTop.Visible = true;
                 newTop.GetNode<Area2D>("Area2D").GetChild<CollisionShape2D>(0).SetDeferred("disabled", false);
             }
+			if (stackedCards.Count == 0 && slotSprite != null)
+			{
+				slotSprite.Visible = true;
+			}
         }
 	}
 }
