@@ -1,9 +1,6 @@
 using Godot;
-using Godot.Collections;
 using System;
 using System.Collections.Generic;
-using System.Numerics;
-using System.Reflection.Metadata;
 
 public partial class CardManager : Node2D
 {
@@ -37,6 +34,8 @@ public partial class CardManager : Node2D
 					{
 						StartDraggingCard(rootDraggedCard); // Start dragging the card if one was selected
 					}
+					
+
 				}
 				else
 				{

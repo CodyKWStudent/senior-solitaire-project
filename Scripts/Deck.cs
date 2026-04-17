@@ -1,12 +1,12 @@
 using Godot;
 using System;
 using System.Collections.Generic;
-using System.Data;
+
 
 public partial class Deck : Node2D
 {
-	// A Stack is perfect for drawing cards
-    Stack<Card> drawPile = new Stack<Card>();
+	// A Stack for drawing cards
+	readonly Stack<Card> drawPile = new Stack<Card>();
     
     // We will keep an array of our 7 Tableaus to easily reference them
     CardTableau[] tableaus = new CardTableau[7];
@@ -19,10 +19,10 @@ public partial class Deck : Node2D
 	PackedScene CARDSLOT_SCENE = (PackedScene)GD.Load("res://Scenes/CardSlot.tscn");
 	
 	[Export]
-	public Node2D tableauContainer;
+	public Node2D TableauContainer;
 
 	[Export]
-	public Node2D foundationSlotContainer;
+	public Node2D FoundationSlotContainer;
 	
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -38,7 +38,7 @@ public partial class Deck : Node2D
 	{
 	}
 
-	public void GenerateTableaus()
+	private void GenerateTableaus()
 	{
 		//Programmatically create the 7 columns and space them out horizontally
 		for (int i = 0; i < 7; i++)
@@ -52,10 +52,10 @@ public partial class Deck : Node2D
             // Space each column by X pixels on the X axis
             newTableau.Position = new Godot.Vector2(i * 150, 0); 
 
-			if (tableauContainer != null)
+			if (TableauContainer != null)
 			{
 				
-				tableauContainer.AddChild(newTableau);
+				TableauContainer.AddChild(newTableau);
 			}
 			else
 			{
@@ -70,7 +70,7 @@ public partial class Deck : Node2D
 	private void GenerateFoundations()
 	{
 		int index = 0;
-		//Loop thorugh the 4 suits 
+		//Loop through the 4 suits 
 		foreach (CardSuit suit in Enum.GetValues(typeof(CardSuit)))
 		{
 			CardSlot newCardSlot = CARDSLOT_SCENE.Instantiate<CardSlot>();
@@ -80,9 +80,9 @@ public partial class Deck : Node2D
 			//Tell the slot it is a Foundation slot and assign its specific suit
 			newCardSlot.InitializeCardSlot(SlotType.Foundation, suit);
 
-			if(foundationSlotContainer != null)
+			if(FoundationSlotContainer != null)
 			{
-				foundationSlotContainer.AddChild(newCardSlot);
+				FoundationSlotContainer.AddChild(newCardSlot);
 				GD.Print($"Added {newCardSlot.Name} to the foundation container");
 			}
 			else
@@ -132,7 +132,7 @@ public partial class Deck : Node2D
 		
 	}
 
-	public void DealStartingBoard()
+	private void DealStartingBoard()
 	{
 		for (int col = 0; col < 7; col++)
 		{
