@@ -25,6 +25,14 @@ window/stretch/mode="canvas_items"
 
 project/assembly_name="SeniorSolitaireProject"
 
+[layer_names]
+
+2d_physics/layer_1="Background"
+2d_physics/layer_2="Cards"
+2d_physics/layer_3="Foundation"
+2d_physics/layer_4="Deck"
+2d_physics/layer_5="UI"
+
 [physics]
 
 3d/physics_engine="Jolt Physics"

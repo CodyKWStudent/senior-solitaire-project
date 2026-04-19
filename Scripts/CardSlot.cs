@@ -4,10 +4,10 @@ using System.Collections.Generic;
 public enum SlotType {Foundation, FreeCell}
 public partial class CardSlot : Node2D
 {
-	public SlotType slotType;
-    public CardSuit targetSuit; // Only matters if it's a Foundation
+	public SlotType SlotType;
+    public CardSuit TargetSuit; // Only matters if it's a Foundation
     
-    // This list will act as our Stack
+    // Each slot of the foundation will be a stack of cards as a list
     private List<Card> stackedCards = new List<Card>();
 
     private Sprite2D slotSprite;
@@ -15,28 +15,15 @@ public partial class CardSlot : Node2D
     // --- Signal for Winning ---
     [Signal]
     public delegate void FoundationCompleteEventHandler();
-
-	// Called when the node enters the scene tree for the first time.
-	public override void _Ready()
-	{
-	
-		
-
-	}
-
-	// Called every frame. 'delta' is the elapsed time since the previous frame.
-	public override void _Process(double delta)
-	{
-	}
-
+    
 	public void InitializeCardSlot (SlotType type, CardSuit suit)
 	{
-		slotType = type;
-		targetSuit = suit;
+		SlotType = type;
+		TargetSuit = suit;
 		slotSprite = GetNode<Sprite2D>("Sprite2D");
 		
 		string texturePath = "";
-		if (slotType == SlotType.Foundation)
+		if (SlotType == SlotType.Foundation)
 		{
 			texturePath = $"res://assets/cards/4x/{suit}/{suit}_CardSlot.png";
 		}
@@ -53,15 +40,15 @@ public partial class CardSlot : Node2D
 	// --- Rule Checking ---
 	public bool IsValidDrop(Card card)
 	{
-		if (slotType == SlotType.FreeCell)
+		if (SlotType == SlotType.FreeCell)
 		{
 			//FreeCells should only hold 1 Card. If empty, it's valid
 			return stackedCards.Count == 0;
 		}
-		else if (slotType == SlotType.Foundation)
+		else if (SlotType == SlotType.Foundation)
 		{
 			// Must match the slot's suit
-			if (card.Suit != targetSuit) return false;
+			if (card.Suit != TargetSuit) return false;
 			if (stackedCards.Count == 0)
 			{
 				//If empty, must be an Ace 
@@ -97,7 +84,7 @@ public partial class CardSlot : Node2D
 		if (slotSprite !=null) slotSprite.Visible = false;
 
         // Check for King to emit win signal!
-        if (slotType == SlotType.Foundation && card.Rank == CardRank.King)
+        if (SlotType == SlotType.Foundation && card.Rank == CardRank.King)
         {
             //EmitSignal(SignalName.FoundationComplete);
         }	

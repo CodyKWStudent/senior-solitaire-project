@@ -1,28 +1,32 @@
-using Godot;
 using System;
 using System.Collections.Generic;
+using Godot;
 
+namespace SeniorSolitaireProject.Scripts;
 
 public partial class Deck : Node2D
 {
-	// A Stack for drawing cards
-	readonly Stack<Card> drawPile = new Stack<Card>();
-    
-    // We will keep an array of our 7 Tableaus to easily reference them
-    CardTableau[] tableaus = new CardTableau[7];
-
+	
+	// --- Data Structures ---
+	readonly Stack<Card> drawPile = new Stack<Card>(); // A Stack for drawing cards
+	CardTableau[] tableaus = new CardTableau[7]; // An array of our 7 Tableaus to easily reference them
 	CardTableau cardTableau = new CardTableau();
+	public List<Card> WastePile = new List<Card>();
     
-    PackedScene CARD_SCENE = (PackedScene)GD.Load("res://Scenes/Card.tscn");
-    PackedScene TABLEAU_SCENE = (PackedScene)GD.Load("res://Scenes/CardTableau.tscn");
-
+	// --- Node References --
+	private Area2D deckArea;
+	
+	
+	// --- Loaded Scenes ---
+	PackedScene CARD_SCENE = (PackedScene)GD.Load("res://Scenes/Card.tscn");
+	PackedScene TABLEAU_SCENE = (PackedScene)GD.Load("res://Scenes/CardTableau.tscn");
 	PackedScene CARDSLOT_SCENE = (PackedScene)GD.Load("res://Scenes/CardSlot.tscn");
 	
-	[Export]
-	public Node2D TableauContainer;
-
-	[Export]
-	public Node2D FoundationSlotContainer;
+	
+	// --- Containers to spawn things ---
+	[Export] public Node2D TableauContainer;
+	[Export] public Node2D FoundationSlotContainer;
+	[Export] public Node2D DeckDrawContainer;
 	
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
@@ -31,6 +35,8 @@ public partial class Deck : Node2D
 		GenerateFoundations();
 		InitializeAndShuffleDeck();
 		DealStartingBoard();
+		
+
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -42,15 +48,15 @@ public partial class Deck : Node2D
 	{
 		//Programmatically create the 7 columns and space them out horizontally
 		for (int i = 0; i < 7; i++)
-        {
-            CardTableau newTableau = TABLEAU_SCENE.Instantiate<CardTableau>();
-            newTableau.Name = $"Tableau_{i}";
+		{
+			CardTableau newTableau = TABLEAU_SCENE.Instantiate<CardTableau>();
+			newTableau.Name = $"Tableau_{i}";
 
 			//Increasing tableau size from 1 to 7 in order to store initial deal. 
 			newTableau.initialTableauSize = i+1;
 			            
-            // Space each column by X pixels on the X axis
-            newTableau.Position = new Godot.Vector2(i * 150, 0); 
+			// Space each column by X pixels on the X axis
+			newTableau.Position = new Godot.Vector2(i * 150, 0); 
 
 			if (TableauContainer != null)
 			{
@@ -63,8 +69,8 @@ public partial class Deck : Node2D
 				AddChild(newTableau);
 			}
 
-            tableaus[i] = newTableau;
-        }
+			tableaus[i] = newTableau;
+		}
 	}
 
 	private void GenerateFoundations()
@@ -93,7 +99,6 @@ public partial class Deck : Node2D
 			index++;
 		}
 	}
-
 	
 	private void InitializeAndShuffleDeck()
 	{
@@ -151,4 +156,51 @@ public partial class Deck : Node2D
 		}	
 	}
 
+	public void DrawCardFromDeck(int amountToDraw)
+	{
+		//TODO Freecell Logic once deck is depleted
+
+		if (drawPile.Count == 0)
+		{
+			GD.Print("Deck is empty");
+			return;
+		}
+
+		for (int i = 0; i < amountToDraw; i++)
+		{
+			if (drawPile.Count > 0)
+			{
+				Card drawnCard = drawPile.Pop();
+				WastePile.Add(drawnCard);
+				
+				if (drawnCard.GetParent() != null) drawnCard.GetParent().RemoveChild(drawnCard);
+				DeckDrawContainer.AddChild(drawnCard);
+				
+				drawnCard.Flip(true);
+			}
+		}
+
+		UpdateWastePileVisuals();
+
+	}
+
+	private void UpdateWastePileVisuals()
+	{
+		// Loop through all drawn cards to position them and manage collisions
+		for (int i = 0; i < WastePile.Count; i++)
+		{
+			Card c = WastePile[i];
+			
+			//Offset so they overlap
+			c.Position = new Godot.Vector2(i * 20, 0);
+			c.ZIndex = i; // Make sure newer cards draw on top
+			
+			//Only the last card should be interacted with. 
+			bool isTopCard = (i == WastePile.Count - 1);
+			
+			var shape = c.GetNode<Area2D>("Area2D").GetChild<CollisionShape2D>(0);
+			shape.SetDeferred("disabled", !isTopCard);
+			
+		}
+	}
 }

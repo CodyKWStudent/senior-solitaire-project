@@ -1,26 +1,38 @@
-using Godot;
 using System;
 using System.Collections.Generic;
+using Godot;
 
-public partial class CardManager : Node2D
+namespace SeniorSolitaireProject.Scripts;
+
+public partial class  CardManager : Node2D
 {
+	// --- Variables --- 
 	Godot.Vector2 screenSize = Godot.Vector2.Zero; // Get the size of the viewport for boundary checks
-	Boolean isDraggingCard = false; // Local variable to track if a card is being dragged
-	private Card rootDraggedCard = null; // Reference to the card being clicked
+	
+	
+	
+	// --- Data Tracking ---
 	private List<Card> draggedCards = new List<Card>(); //The whole stack being moved. 
-	Node2D cardNode; // Reference to the parent node containing all card nodes
-	public Signal cardEntered; // Signal to indicate when the mouse enters a card area
-	public Signal cardExited; // Signal to indicate when the mouse exits a card area
-	Boolean isMouseOverCard = false; // Local variable to track if the mouse is currently over a card
-
 	private CardTableau originalTableau = null;
 	private CardSlot originalSlot = null;
+	Node2D cardNode; // Reference to the parent node containing all card nodes
+	private Card rootDraggedCard = null; // Reference to the card being clicked
+	private Boolean isDraggingCard = false; // Local variable to track if a card is being dragged
+	
+	// --- Signals ---
+	private Signal cardEntered; // Signal to indicate when the mouse enters a card area
+	private Signal cardExited; // Signal to indicate when the mouse exits a card area
+	private Boolean isMouseOverCard = false; // Local variable to track if the mouse is currently over a card
+
+	
+	// --- External Classes ---
+	[Export] public Deck GameDeck; 
 
 
-    public override void _UnhandledInput(InputEvent @event)
-    {
-		// Check if the input event is specfically a mouse button event
-       if (@event is InputEventMouseButton mouseEvent)
+	public override void _UnhandledInput(InputEvent @event)
+	{
+		// Check if the input event is specifically a mouse button event
+		if (@event is InputEventMouseButton mouseEvent)
 		{
 			//Ensure we are only looking at the Left Mouse Button
 			if (mouseEvent.ButtonIndex == MouseButton.Left)
@@ -28,14 +40,20 @@ public partial class CardManager : Node2D
 				if (mouseEvent.IsPressed()){
 					
 					GD.Print("Left Button Pressed");
+					
+					if (RaycastCheckForDeck())
+					{
+						GD.Print("Deck Clicked!");
+						if (GameDeck != null) GameDeck.DrawCardFromDeck(3);
+						return; //Stop running to not accidentally drag any cards
+					}
+					
 					// Perform a raycast at the mouse position to check for card interaction
 					RaycastCheckForCard();
 					if (rootDraggedCard != null)
 					{
 						StartDraggingCard(rootDraggedCard); // Start dragging the card if one was selected
 					}
-					
-
 				}
 				else
 				{
@@ -45,11 +63,10 @@ public partial class CardManager : Node2D
 					{
 						StopDraggingCard(); // Stop dragging the card when the left mouse button is released
 					}
-					
 				}
 			}
 		}
-    }
+	}
 
 	/*
 	 * This method performs a raycast at the current mouse position to check for card interactions.
@@ -57,16 +74,16 @@ public partial class CardManager : Node2D
 	 * If a card is detected, it returns true; otherwise, it returns false.
 	 */
 	 
-     private void RaycastCheckForCard()
+	private void RaycastCheckForCard()
 	{
 		// Get the current 2D physics world state
 		var spaceRid = GetWorld2D().DirectSpaceState;
 
 		// Create and configure the query parameters for the raycast
-    	var parameters = new PhysicsPointQueryParameters2D();
+		var parameters = new PhysicsPointQueryParameters2D();
 		parameters.Position = GetGlobalMousePosition(); // Start the raycast from the mouse position
-		parameters.CollideWithAreas = true; // We want to detect areas (cards)
-		parameters.CollisionMask = 1; // Assuming cards are on layer 1
+		parameters.CollideWithAreas = true; // We want to detect areas 
+		parameters.CollisionMask = 2; // Cards are on Layer 2
 
 		//Perform the intersection query
 		var result = spaceRid.IntersectPoint(parameters);
@@ -117,7 +134,7 @@ public partial class CardManager : Node2D
 		var parameters = new PhysicsPointQueryParameters2D();
 		parameters.Position = GetGlobalMousePosition(); // Start the raycast from the mouse position
 		parameters.CollideWithAreas = true; // We want to detect areas (card slots)
-		parameters.CollisionMask = 2; // Assuming card slots are on layer 2
+		parameters.CollisionMask = 4; // Card Slots (Foundations) are on Layer 4
 
 		//Perform the intersection query
 		var result = spaceRid.IntersectPoint(parameters);
@@ -134,6 +151,30 @@ public partial class CardManager : Node2D
 		
 	}
 
+	private bool RaycastCheckForDeck()
+	{
+		GD.Print("Checking for Deck");
+		var spaceState = GetWorld2D().DirectSpaceState;
+		var parameters = new PhysicsPointQueryParameters2D();
+		parameters.Position = GetGlobalMousePosition();
+		parameters.CollideWithAreas = true;
+		
+		parameters.CollisionMask = 3; //Deck is on Layer 3
+		
+		var result = spaceState.IntersectPoint(parameters);
+		
+		if (result.Count > 0)
+		{
+			var hitData = (Godot.Collections.Dictionary)result[0];
+			var collider = hitData["collider"].As<Node2D>();
+			if (collider != null && collider.GetParent().Name == "Deck")
+			{
+				return true;
+			}
+		}
+		
+		return false;
+	}
 
 	private Node2D GetCardWithHighestZIndex(Godot.Collections.Array<Godot.Collections.Dictionary> raycastResults)
 	{
@@ -165,11 +206,19 @@ public partial class CardManager : Node2D
 		var parameters = new PhysicsPointQueryParameters2D();
 		parameters.Position = GetGlobalMousePosition();
 		parameters.CollideWithAreas = true;
-		parameters.CollisionMask = 1;
+		parameters.CollisionMask = 2; // Cards should be on Layer 2
 
-		//Ignore card we are currently dragging
-		var draggedArea = rootDraggedCard.GetNode<Area2D>("Area2D");
-		parameters.Exclude = new Godot.Collections.Array<Rid> {draggedArea.GetRid()};
+		// Ignore all cards currently being dragged
+		var excludeRids = new Godot.Collections.Array<Rid>();
+		foreach (var card in draggedCards)
+		{
+			var draggedArea = card.GetNode<Area2D>("Area2D");
+			if (draggedArea != null)
+			{
+				excludeRids.Add(draggedArea.GetRid());
+			}
+		}
+		parameters.Exclude = excludeRids;
 
 		var result = spaceState.IntersectPoint(parameters);
 
@@ -189,7 +238,7 @@ public partial class CardManager : Node2D
 
 	public bool IsRed(CardSuit suit)
 	{
-		return suit == CardSuit.Hearts || suit == CardSuit.Diamonds;
+		return suit is CardSuit.Hearts or CardSuit.Diamonds;
 	}
 
 	private bool IsValidMove(Card draggedCard, Card targetCard)
@@ -301,6 +350,7 @@ public partial class CardManager : Node2D
 		foreach (Card c in draggedCards)
 		{
 			c.Modulate = new Color (1,1,1,1);
+			c.ZIndex -= 100;
 		}
 
 		//Check if dropped card ontop of another card
@@ -345,8 +395,8 @@ public partial class CardManager : Node2D
 			{
 				GD.Print("Invalid Move. Returning card to original position...");
 				//Snap Back Logic: Original tableau to recalculate its layout
-				 if (originalTableau != null)originalTableau.UpdateCardTableau();
-				 else if (originalSlot != null) rootDraggedCard.Position = Godot.Vector2.Zero;
+				if (originalTableau != null)originalTableau.UpdateCardTableau();
+				else if (originalSlot != null) rootDraggedCard.Position = Godot.Vector2.Zero;
 			}
 		}
 		// --- SCENARIO 2: Dropped on an empty space/slot ---
@@ -388,16 +438,16 @@ public partial class CardManager : Node2D
 				else if (validSlot.IsValidDrop(rootDraggedCard))
 				{
 					// Safely remove it from wherever it came from
-                    if (originalTableau != null) originalTableau.RemoveCardFromTableau(rootDraggedCard);
-                    else if (originalSlot != null) originalSlot.RemoveCard(rootDraggedCard);
+					if (originalTableau != null) originalTableau.RemoveCardFromTableau(rootDraggedCard);
+					else if (originalSlot != null) originalSlot.RemoveCard(rootDraggedCard);
 
-                    validSlot.AddCard(rootDraggedCard);
+					validSlot.AddCard(rootDraggedCard);
 				}
 				else
 				{
 					GD.Print("Invalid Slot Drop. Snapping Back.");
 					if (originalTableau != null) originalTableau.UpdateCardTableau();
-                    else if (originalSlot != null) rootDraggedCard.Position = Godot.Vector2.Zero;
+					else if (originalSlot != null) rootDraggedCard.Position = Godot.Vector2.Zero;
 				}
 				
 			}
@@ -408,7 +458,7 @@ public partial class CardManager : Node2D
 			GD.Print("Card dropped outside of any slot. Snapping Back.");
 			
 			if (originalTableau != null) originalTableau.UpdateCardTableau();
-            else if (originalSlot != null) rootDraggedCard.Position = Godot.Vector2.Zero;
+			else if (originalSlot != null) rootDraggedCard.Position = Godot.Vector2.Zero;
 			
 		}
 		isDraggingCard = false;
@@ -437,4 +487,3 @@ public partial class CardManager : Node2D
 		}
 	}
 }
-	

@@ -11,11 +11,11 @@ public partial class CardTableau : Node2D
 	//Y-Offset for cards overlapping
 	private const float Y_OFFSET = 50.0f;
 	//List to track cards in each column
-	public List<Card> cardsInColumn = new List<Card>();
-	//Load Card from Card Scnee
+	private List<Card> cardsInColumn = new List<Card>();
+	//Load Card from Card Scene
 	PackedScene CARD_SCENE_PATH = (PackedScene)GD.Load("res://Scenes/Card.tscn");
 	// Create Cardmanager Node
-	CardManager cardManager;
+	SeniorSolitaireProject.Scripts.CardManager cardManager;
 	//Find the starting position of the node to create the tableau column
 	Vector2 tableauPosition;
 	 
@@ -76,7 +76,9 @@ public partial class CardTableau : Node2D
 
 	public List<Card> GetCardsFrom(Card clickedCard)
 	{
+		//Create temp list to put cards into if the user attempts to drag multiple cards
 		List<Card> draggedStack = new List<Card>();
+		//Find where the user clicks the card and drag everything below that if applicable. 
 		int startIndex = cardsInColumn.IndexOf(clickedCard);
 
 		if(startIndex != -1)
@@ -109,23 +111,25 @@ public partial class CardTableau : Node2D
 		//Safety check
 		if (startIndex == -1) return false;
 		
-		//If ver last card in the column it's always valid to pick up
+		//If very last card in the column it's always valid to pick up
 		if (startIndex == cardsInColumn.Count - 1) return true;
 
 		//Loop through the stack starting from clicked card
 		for (int i = startIndex; i < cardsInColumn.Count - 1; i++)
 		{
 			Card currentCard = cardsInColumn[i];
+			GD.Print($"Current card is: {currentCard.Name}");
 			Card cardBelowIt = cardsInColumn[i + 1];
+			GD.Print($"Card Below current card is: {cardBelowIt.Name}");
 
 			//Null check
-			if(currentCard == null || cardBelowIt == null) return false;
+			
 
 			//Solitaire Rules: The card below must be opposite color and exactly 1 rank lower
-			bool isDifferentColor = cardManager.IsRed(currentCard.Suit) != cardManager.IsRed(cardBelowIt.Suit);
+			//bool isDifferentColor = cardManager.IsRed(currentCard.Suit);
             bool isOneRankLower = (int)cardBelowIt.Rank == (int)currentCard.Rank - 1;
 
-			if (!isDifferentColor || !isOneRankLower)
+			if (!isOneRankLower)
 			{
 				//Sequence broken do not grab stack.
 				return false;

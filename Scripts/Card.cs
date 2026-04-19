@@ -2,8 +2,10 @@ using Godot;
 using System;
 using System.Reflection.Metadata;
 
-public enum CardSuit { Hearts, Diamonds, Clubs, Spades }
+public enum CardSuit { Hearts, Diamonds, Clubs, Spades}
 public enum CardRank { Ace = 1, Two, Three, Four, Five, Six, Seven, Eight, Nine, Ten, Jack, Queen, King }
+
+
 public partial class Card : Node2D
 {
 	// --- Data Properties ---
@@ -33,14 +35,10 @@ public partial class Card : Node2D
 		cardArea = GetNode<Area2D>("Area2D");
 		cardArea.MouseEntered += () =>
 		{
-			GD.Print("Mouse entered " + Name + "'s area!");
-			
 			EmitSignal(SignalName.CardEntered, this); // Emit the cardEntered signal when the mouse enters the area
 		};
 		cardArea.MouseExited += () =>
 		{
-			GD.Print("Mouse exited " + Name + "'s area!");
-			
 			EmitSignal(SignalName.CardExited, this); // Emit the cardExited signal when the mouse exits the area
 		};
 	}
@@ -68,10 +66,7 @@ public partial class Card : Node2D
 		//Check if the file exists before load to prevent crashes
 		if (ResourceLoader.Exists(texturePath))
 		{
-			
 			faceTexture = GD.Load<Texture2D>(texturePath);
-			
-			
 		}
 		else
 		{
@@ -89,7 +84,6 @@ public partial class Card : Node2D
 		//Swap sprite texture depending on face-up state
 		if (cardSprite != null)
 		{
-			
 			cardSprite.Texture = IsFaceUp ? faceTexture : backTexture;
 		}
 	}

@@ -3,7 +3,7 @@
 [ext_resource type="Script" uid="uid://bp6uitisesy7a" path="res://Scripts/Card.cs" id="1_8xkvs"]
 
 [sub_resource type="RectangleShape2D" id="RectangleShape2D_8xkvs"]
-size = Vector2(180, 252)
+size = Vector2(130, 202)
 
 [node name="Card" type="Node2D" unique_id=1998219088]
 script = ExtResource("1_8xkvs")
@@ -12,6 +12,8 @@ script = ExtResource("1_8xkvs")
 scale = Vector2(0.5, 0.5)
 
 [node name="Area2D" type="Area2D" parent="." unique_id=2119831692]
+collision_layer = 2
+collision_mask = 5
 
 [node name="CollisionShape2D" type="CollisionShape2D" parent="Area2D" unique_id=733114695]
 shape = SubResource("RectangleShape2D_8xkvs")

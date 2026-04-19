@@ -1,24 +1,29 @@
 [gd_scene format=3 uid="uid://mtn0uqmdfwin"]
 
 [ext_resource type="Script" uid="uid://bfsnsntrnrf2k" path="res://Scripts/CardManager.cs" id="1_bo1nx"]
-[ext_resource type="PackedScene" uid="uid://du5v47ot2mvbj" path="res://Scenes/deck.tscn" id="8_344ge"]
+[ext_resource type="PackedScene" uid="uid://du5v47ot2mvbj" path="res://Scenes/Deck.tscn" id="8_344ge"]
 
 [node name="Main" type="Node2D" unique_id=1948449585]
 metadata/_edit_vertical_guides_ = [1081.0]
 metadata/_edit_horizontal_guides_ = [1920.0]
 
-[node name="CardManager" type="Node2D" parent="." unique_id=2017600728]
+[node name="CardManager" type="Node2D" parent="." unique_id=2017600728 node_paths=PackedStringArray("GameDeck")]
 script = ExtResource("1_bo1nx")
+GameDeck = NodePath("../Deck")
 
 [node name="InputManager" type="Node2D" parent="." unique_id=1891106296]
 
-[node name="Deck" parent="." unique_id=1592302419 node_paths=PackedStringArray("tableauContainer", "foundationSlotContainer") instance=ExtResource("8_344ge")]
+[node name="Deck" parent="." unique_id=1592302419 node_paths=PackedStringArray("TableauContainer", "FoundationSlotContainer", "DeckDrawContainer") instance=ExtResource("8_344ge")]
 position = Vector2(79, 345)
-tableauContainer = NodePath("../TableauContainer")
-foundationSlotContainer = NodePath("../FoundationSlotContainer")
+TableauContainer = NodePath("../TableauContainer")
+FoundationSlotContainer = NodePath("../FoundationSlotContainer")
+DeckDrawContainer = NodePath("../DeckDrawContainer")
 
 [node name="TableauContainer" type="Node2D" parent="." unique_id=2096771345]
 position = Vector2(79, 576)
 
 [node name="FoundationSlotContainer" type="Node2D" parent="." unique_id=1852641002]
 position = Vector2(383, 125)
+
+[node name="DeckDrawContainer" type="Node2D" parent="." unique_id=55508995]
+position = Vector2(231, 345)
