@@ -184,6 +184,14 @@ public partial class Deck : Node2D
 
 	}
 
+	public void RemoveCardFromDeck(Card card)
+	{
+		if (!WastePile.Contains(card)) return;
+		WastePile.Remove(card);
+		//Rerun update logic so the new bottom card becomes interactable
+		UpdateWastePileVisuals();
+	}
+
 	private void UpdateWastePileVisuals()
 	{
 		// Loop through all drawn cards to position them and manage collisions

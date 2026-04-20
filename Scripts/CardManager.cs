@@ -15,6 +15,7 @@ public partial class  CardManager : Node2D
 	private List<Card> draggedCards = new List<Card>(); //The whole stack being moved. 
 	private CardTableau originalTableau = null;
 	private CardSlot originalSlot = null;
+	private Vector2 originalCardPosition;
 	Node2D cardNode; // Reference to the parent node containing all card nodes
 	private Card rootDraggedCard = null; // Reference to the card being clicked
 	private Boolean isDraggingCard = false; // Local variable to track if a card is being dragged
@@ -94,26 +95,36 @@ public partial class  CardManager : Node2D
 			Node2D topNode = GetCardWithHighestZIndex(result); // Get the card with the highest Z-index from the raycast results
 			rootDraggedCard = topNode as Card;
 			
-			if (rootDraggedCard != null)			
+			if (rootDraggedCard != null)
 			{
-				//Grab the tableau this card belongs to
-				originalTableau = rootDraggedCard.GetParent() as CardTableau;
-				if (originalTableau != null && originalTableau.IsStackValid(rootDraggedCard))
+				var parent = rootDraggedCard.GetParent();
+				originalTableau = parent as CardTableau;
+				originalSlot = parent as CardSlot;
+
+				if (originalTableau != null)
 				{
-					GD.Print("Valid Stack Clicked: "+ rootDraggedCard.Name);
+					if (originalTableau.IsStackValid(rootDraggedCard))
+					{
+						GD.Print("Valid Stack Clicked: " + rootDraggedCard.Name);
+						originalSlot = null; // Not a slot drag
+						StartDraggingCard(rootDraggedCard);
+					}
+					else
+					{
+						GD.Print("Invalid Sequence. Cannot drag this sub-stack.");
+						rootDraggedCard = null;
+					}
+				}
+				else if (originalSlot != null)
+				{
+					GD.Print("Valid Card From Slot Clicked: " + rootDraggedCard.Name);
+					originalTableau = null; // Not a tableau drag
 					StartDraggingCard(rootDraggedCard);
 				}
-				else if (originalSlot !=null)
+				else // Not in a tableau or slot, so it's a waste card
 				{
-					GD.Print("Valid Card From Slot Clicked: "+ rootDraggedCard.Name);
+					GD.Print("Valid Card From Waste Clicked: " + rootDraggedCard.Name);
 					StartDraggingCard(rootDraggedCard);
-				} 
-				else
-				{
-					GD.Print("Invalid Sequence. Cannot drag this sub-stack.");
-					//Reject the drag by clearing reference
-					rootDraggedCard = null;
-					//**FOR LATER** Add Error shake here:
 				}
 			}
 			
@@ -314,10 +325,8 @@ public partial class  CardManager : Node2D
 
 	private void StartDraggingCard(Card card)
 	{
-		isDraggingCard = true; // Set the dragging flag to true
-		rootDraggedCard = card; // Store a reference to the card being dragged
-
-		originalTableau = rootDraggedCard.GetParent() as CardTableau;
+		isDraggingCard = true;
+		rootDraggedCard = card;
 
 		if (originalTableau != null)
 		{
@@ -330,9 +339,10 @@ public partial class  CardManager : Node2D
 				c.ZIndex += 100; //Force them to draw oever everything else while dragging. 
 			}
 		}
-		else if (originalSlot != null)
+		else // For single card drags from Slot or Waste
 		{
 			draggedCards = new List<Card> {rootDraggedCard};
+			originalCardPosition = rootDraggedCard.Position;
 			rootDraggedCard.Modulate = new Color (1,1,1, 0.5f);
 			rootDraggedCard.ZIndex += 100;
 		}		
@@ -340,6 +350,7 @@ public partial class  CardManager : Node2D
 
 	private void StopDraggingCard()
 	{
+		
 		if (rootDraggedCard == null)
 		{
 			GD.Print("Error: StopDraggingCard called but no card is currently selected.");
@@ -389,14 +400,21 @@ public partial class  CardManager : Node2D
 						originalSlot.RemoveCard(rootDraggedCard);
 						targetTableau.AddCardToTableau(rootDraggedCard);
 					}
+					//It came from the waste pile
+					else
+					{
+						//Remove from the waste pile
+						GameDeck.RemoveCardFromDeck(rootDraggedCard);
+						//Add to the new column
+						targetTableau.AddCardToTableau(rootDraggedCard);
+					}
 				}
 			}
+			//TODO Add logic for dropping card ontop of another card already in the Card Slot
 			else
 			{
 				GD.Print("Invalid Move. Returning card to original position...");
-				//Snap Back Logic: Original tableau to recalculate its layout
-				if (originalTableau != null)originalTableau.UpdateCardTableau();
-				else if (originalSlot != null) rootDraggedCard.Position = Godot.Vector2.Zero;
+				SnapCardBack();
 			}
 		}
 		// --- SCENARIO 2: Dropped on an empty space/slot ---
@@ -432,22 +450,21 @@ public partial class  CardManager : Node2D
 				if (draggedCards.Count > 1 )
 				{
 					GD.Print("Cannot drop multiple cards onto a Foundation");
-					if (originalTableau !=null)originalTableau.UpdateCardTableau();
-					else if(originalSlot !=null) rootDraggedCard.Position = Godot.Vector2.Zero;
+					SnapCardBack();
 				}
 				else if (validSlot.IsValidDrop(rootDraggedCard))
 				{
 					// Safely remove it from wherever it came from
 					if (originalTableau != null) originalTableau.RemoveCardFromTableau(rootDraggedCard);
 					else if (originalSlot != null) originalSlot.RemoveCard(rootDraggedCard);
+					else GameDeck.RemoveCardFromDeck(rootDraggedCard);
 
 					validSlot.AddCard(rootDraggedCard);
 				}
 				else
 				{
 					GD.Print("Invalid Slot Drop. Snapping Back.");
-					if (originalTableau != null) originalTableau.UpdateCardTableau();
-					else if (originalSlot != null) rootDraggedCard.Position = Godot.Vector2.Zero;
+					SnapCardBack();
 				}
 				
 			}
@@ -456,16 +473,29 @@ public partial class  CardManager : Node2D
 		else
 		{
 			GD.Print("Card dropped outside of any slot. Snapping Back.");
-			
-			if (originalTableau != null) originalTableau.UpdateCardTableau();
-			else if (originalSlot != null) rootDraggedCard.Position = Godot.Vector2.Zero;
-			
+			SnapCardBack();
 		}
 		isDraggingCard = false;
 		rootDraggedCard = null; // Clear the reference to the selected card
 		originalTableau = null; //Clear out memory for next drag.
 		originalSlot = null;
 		draggedCards.Clear();
+	}
+
+	private void SnapCardBack()
+	{
+		if (originalTableau != null)
+		{
+			originalTableau.UpdateCardTableau();
+		}
+		else if (originalSlot != null)
+		{
+			rootDraggedCard.Position = Godot.Vector2.Zero;
+		}
+		else // Waste card
+		{
+			rootDraggedCard.Position = originalCardPosition;
+		}
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
