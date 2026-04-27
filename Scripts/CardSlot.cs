@@ -1,7 +1,7 @@
 using Godot;
 using System;
 using System.Collections.Generic;
-public enum SlotType {Foundation, FreeCell}
+public enum SlotType {Foundation, FreeCell, Deck}
 public partial class CardSlot : Node2D
 {
 	public SlotType SlotType;
@@ -42,8 +42,8 @@ public partial class CardSlot : Node2D
 	{
 		if (SlotType == SlotType.FreeCell)
 		{
-			//FreeCells should only hold 1 Card. If empty, it's valid
-			return stackedCards.Count == 0;
+			//Free Cells support more than one card
+			return true;
 		}
 		else if (SlotType == SlotType.Foundation)
 		{
@@ -60,6 +60,12 @@ public partial class CardSlot : Node2D
 				Card topCard = stackedCards[stackedCards.Count - 1];
 				return (int)card.Rank == (int)topCard.Rank +1;
 			}
+		}
+		else
+		{
+			//Deck Free Cell should only ever take exactly 1 card. Cannot have other cards move into it while stacked
+			//Nor should they abe able to have cards stack into it like a foundation
+			if (stackedCards.Count == 0) return true;
 		}
 		return false;
 	}

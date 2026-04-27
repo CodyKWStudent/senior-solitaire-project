@@ -15,12 +15,15 @@ public partial class Deck : Node2D
     
 	// --- Node References --
 	private Area2D deckArea;
-	
+	private Sprite2D deckSprite;
+	private CardSlot _freeCellSlot;// Slot that appears when the tableau is empty
 	
 	// --- Loaded Scenes ---
 	PackedScene CARD_SCENE = (PackedScene)GD.Load("res://Scenes/Card.tscn");
 	PackedScene TABLEAU_SCENE = (PackedScene)GD.Load("res://Scenes/CardTableau.tscn");
 	PackedScene CARDSLOT_SCENE = (PackedScene)GD.Load("res://Scenes/CardSlot.tscn");
+	private static readonly PackedScene CardSlotScene = GD.Load<PackedScene>("res://Scenes/CardSlot.tscn");
+	
 	
 	
 	// --- Containers to spawn things ---
@@ -31,10 +34,13 @@ public partial class Deck : Node2D
 	// Called when the node enters the scene tree for the first time.
 	public override void _Ready()
 	{
+		deckArea = GetNode<Area2D>("Area2D");
+		deckSprite = GetNode<Sprite2D>("Sprite2D");
 		GenerateTableaus();
 		GenerateFoundations();
 		InitializeAndShuffleDeck();
 		DealStartingBoard();
+		EnsureSlotExists();
 		
 
 	}
@@ -158,7 +164,7 @@ public partial class Deck : Node2D
 
 	public void DrawCardFromDeck(int amountToDraw)
 	{
-		//TODO Freecell Logic once deck is depleted
+		
 
 		if (drawPile.Count == 0)
 		{
@@ -181,6 +187,18 @@ public partial class Deck : Node2D
 		}
 
 		UpdateWastePileVisuals();
+		if (drawPile.Count == 0)
+		{
+			GD.Print("Deck is empty");
+			EnsureSlotExists();
+			deckSprite.Visible = false;
+			_freeCellSlot.Visible = true;
+			if (deckArea != null)
+			{
+				deckArea.SetDeferred("disabled", true);
+				
+			}
+		}
 
 	}
 
@@ -209,6 +227,23 @@ public partial class Deck : Node2D
 			var shape = c.GetNode<Area2D>("Area2D").GetChild<CollisionShape2D>(0);
 			shape.SetDeferred("disabled", !isTopCard);
 			
+		}
+	}
+	
+	private void EnsureSlotExists()
+	{
+		if (_freeCellSlot == null)
+		{
+			_freeCellSlot = CardSlotScene.Instantiate<CardSlot>();
+			// The suit doesn't matter for a FreeCell type slot.
+			_freeCellSlot.InitializeCardSlot(SlotType.Deck, CardSuit.Clubs);
+			AddChild(_freeCellSlot);
+
+			// Position it at the Deck's origin.
+			_freeCellSlot.Position = Vector2.Zero;
+
+			// Set initial visibility.
+			_freeCellSlot.Visible = false;
 		}
 	}
 }

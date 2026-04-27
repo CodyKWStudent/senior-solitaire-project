@@ -254,12 +254,12 @@ public partial class  CardManager : Node2D
 
 	private bool IsValidMove(Card draggedCard, Card targetCard)
 	{
-		//Check if suits are opposite
+		// Tableau stacking rule: opposite colors, and descending rank.
 		bool isDifferentColor = IsRed(draggedCard.Suit) != IsRed(targetCard.Suit);
-		//Check if target is exactly one rank higher than dragged card
-		bool isOneRankHigher = (int)targetCard.Rank == (int)draggedCard.Rank + 1;
+		// e.g., dragged 5 is placed on target 6. dragged.Rank + 1 == target.Rank
+		bool isCorrectRank = (int)draggedCard.Rank + 1 == (int)targetCard.Rank;
 
-		return isDifferentColor && isOneRankHigher;
+		return isDifferentColor && isCorrectRank;
 	}
 
 	// Called when the node enters the scene tree for the first time.
@@ -350,136 +350,172 @@ public partial class  CardManager : Node2D
 
 	private void StopDraggingCard()
 	{
-		
 		if (rootDraggedCard == null)
 		{
 			GD.Print("Error: StopDraggingCard called but no card is currently selected.");
-			return; // Exit the method if there is no selected card to stop dragging
+			return;
 		}
-		//Reset Visual effects from dragging
-		
+
+		// Reset visual effects from dragging
 		foreach (Card c in draggedCards)
 		{
-			c.Modulate = new Color (1,1,1,1);
+			c.Modulate = new Color(1, 1, 1, 1);
 			c.ZIndex -= 100;
 		}
 
-		//Check if dropped card ontop of another card
 		Card targetCard = GetTargetCardUnderMouse();
-		//Check if dropped on an empty slot
-		Node2D cardSlotFound = RaycastCheckForCardSlot(); // Check if the card is being dropped over a valid card slot
-		
-		//--- SCENARIO 1: Dropped on another Card ---
-		if (targetCard !=null)
-		{
-			GD.Print($"Dropped {rootDraggedCard.Name} onto {targetCard.Name}");
-			//Solitaire Rule Check
-			if (IsValidMove(rootDraggedCard as Card, targetCard))
-			{
-				GD.Print("Valid Move!");
-				//Get the specific tableau that the target card belongs to 
-				CardTableau targetTableau = targetCard.GetParent() as CardTableau;
+		CardSlot slotNode = RaycastCheckForCardSlot() as CardSlot;
 
-				if (targetTableau != null)
-				{
-					//Check if it came from a tableau
-					if (originalTableau != null)
-					{			
-						foreach (Card c in draggedCards)
-						{
-							//Remove from the old column
-							originalTableau.RemoveCardFromTableau(c as Card);
-							//Add to the new column
-							targetTableau.AddCardToTableau(c as Card);
-						}
-					}
-				
-					//Check if it came from a Foundation
-					else if (originalSlot !=null)
-					{
-						originalSlot.RemoveCard(rootDraggedCard);
-						targetTableau.AddCardToTableau(rootDraggedCard);
-					}
-					//It came from the waste pile
-					else
-					{
-						//Remove from the waste pile
-						GameDeck.RemoveCardFromDeck(rootDraggedCard);
-						//Add to the new column
-						targetTableau.AddCardToTableau(rootDraggedCard);
-					}
-				}
+		// --- Main Logic Branching ---
+		if (targetCard != null)
+		{
+			// --- SCENARIO A: Dropped on another card ---
+			CardSlot parentSlot = targetCard.GetParent() as CardSlot;
+			CardTableau parentTableau = targetCard.GetParent() as CardTableau;
+
+			if (parentSlot != null && parentSlot.SlotType == SlotType.Foundation)
+			{
+				HandleFoundationDrop(parentSlot);
 			}
-			//TODO Add logic for dropping card ontop of another card already in the Card Slot
+			else if (parentTableau != null)
+			{
+				HandleTableauDrop(parentTableau, targetCard);
+			}
 			else
 			{
-				GD.Print("Invalid Move. Returning card to original position...");
+				GD.Print("Invalid card drop target. Snapping back.");
 				SnapCardBack();
 			}
 		}
-		// --- SCENARIO 2: Dropped on an empty space/slot ---
-		else if (cardSlotFound != null)
+		else if (slotNode != null)
 		{
-			//Check if the slot belongs to the CardTableau
-			CardTableau emptyTableau = cardSlotFound.GetParent() as CardTableau;
-			CardSlot validSlot = cardSlotFound as CardSlot;
-			
-			if (emptyTableau != null && emptyTableau.IsEmpty())
+			// --- SCENARIO B: Dropped on an empty slot ---
+			if (slotNode.SlotType == SlotType.Foundation)
 			{
-				GD.Print("Card dropped on an empty Tableau column");
-				//Transfer the card over to the FreeCell
-				if (originalTableau !=null)
-				{
-					foreach(Card c in draggedCards)
-					{
-
-						originalTableau.RemoveCardFromTableau(c);
-						emptyTableau.AddCardToTableau(c);
-					}
-				}
-				else if (originalSlot != null)
-				{
-					originalSlot.RemoveCard(rootDraggedCard);
-					emptyTableau.AddCardToTableau(rootDraggedCard);
-				}
+				HandleFoundationDrop(slotNode);
 			}
-			else if (validSlot != null)
+			else if (slotNode.SlotType == SlotType.Deck)
 			{
-				//It's a Foundation Slot 
-				GD.Print($"Dropped on Slot: {validSlot.Name}");
-				if (draggedCards.Count > 1 )
+				HandleDeckFreeCellDrop(slotNode);
+			}
+			else // Must be a FreeCell slot in an empty tableau
+			{
+				CardTableau emptyTableau = slotNode.GetParent() as CardTableau;
+				if (emptyTableau != null)
 				{
-					GD.Print("Cannot drop multiple cards onto a Foundation");
-					SnapCardBack();
-				}
-				else if (validSlot.IsValidDrop(rootDraggedCard))
-				{
-					// Safely remove it from wherever it came from
-					if (originalTableau != null) originalTableau.RemoveCardFromTableau(rootDraggedCard);
-					else if (originalSlot != null) originalSlot.RemoveCard(rootDraggedCard);
-					else GameDeck.RemoveCardFromDeck(rootDraggedCard);
-
-					validSlot.AddCard(rootDraggedCard);
+					HandleEmptyTableauDrop(emptyTableau);
 				}
 				else
 				{
-					GD.Print("Invalid Slot Drop. Snapping Back.");
+					GD.Print("Invalid empty slot drop. Snapping Back.");
 					SnapCardBack();
 				}
-				
 			}
 		}
-		// --- SCENARIO 3: Dropped outside of anything ---
 		else
 		{
-			GD.Print("Card dropped outside of any slot. Snapping Back.");
+			// --- SCENARIO C: Dropped outside of anything ---
+			GD.Print("Card dropped outside of any valid area. Snapping Back.");
 			SnapCardBack();
 		}
+
+		// Reset state variables
 		isDraggingCard = false;
-		rootDraggedCard = null; // Clear the reference to the selected card
-		originalTableau = null; //Clear out memory for next drag.
+		rootDraggedCard = null;
+		originalTableau = null;
 		originalSlot = null;
 		draggedCards.Clear();
+	}
+	
+	private void HandleFoundationDrop(CardSlot foundationSlot)
+	{
+		if (draggedCards.Count > 1)
+		{
+			GD.Print("Cannot drop multiple cards onto a Foundation.");
+			SnapCardBack();
+			return;
+		}
+
+		if (foundationSlot.IsValidDrop(rootDraggedCard))
+		{
+			GD.Print("Valid Foundation Move!");
+			RemoveCardFromOriginalLocation();
+			foundationSlot.AddCard(rootDraggedCard);
+		}
+		else
+		{
+			GD.Print("Invalid Foundation Drop. Snapping Back.");
+			SnapCardBack();
+		}
+	}
+	
+	private void HandleDeckFreeCellDrop(CardSlot deckSlot)
+	{
+		if (draggedCards.Count > 1)
+		{
+			GD.Print("Cannot drop multiple cards onto the Deck slot.");
+			SnapCardBack();
+			return;
+		}
+
+		if (deckSlot.IsValidDrop(rootDraggedCard))
+		{
+			GD.Print("Valid Deck FreeCell Move!");
+			RemoveCardFromOriginalLocation();
+			deckSlot.AddCard(rootDraggedCard);
+		}
+		else
+		{
+			GD.Print("Invalid Deck FreeCell Drop. Snapping Back.");
+			SnapCardBack();
+		}
+	}
+
+	private void HandleTableauDrop(CardTableau targetTableau, Card targetCard)
+	{
+		if (IsValidMove(rootDraggedCard, targetCard))
+		{
+			GD.Print("Valid Tableau Move!");
+			RemoveCardFromOriginalLocation();
+			foreach (Card c in draggedCards)
+			{
+				targetTableau.AddCardToTableau(c);
+			}
+		}
+		else
+		{
+			GD.Print("Invalid Tableau Move. Returning card to original position...");
+			SnapCardBack();
+		}
+	}
+
+	private void HandleEmptyTableauDrop(CardTableau targetTableau)
+	{
+		GD.Print("Card dropped on an empty Tableau column");
+		RemoveCardFromOriginalLocation();
+		foreach (Card c in draggedCards)
+		{
+			targetTableau.AddCardToTableau(c);
+		}
+	}
+
+	private void RemoveCardFromOriginalLocation()
+	{
+		if (originalTableau != null)
+		{
+			foreach (var card in draggedCards)
+			{
+				originalTableau.RemoveCardFromTableau(card);
+			}
+		}
+		else if (originalSlot != null)
+		{
+			originalSlot.RemoveCard(rootDraggedCard);
+		}
+		else // From waste
+		{
+			GameDeck.RemoveCardFromDeck(rootDraggedCard);
+		}
 	}
 
 	private void SnapCardBack()
