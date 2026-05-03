@@ -1,0 +1,6 @@
+[gd_scene format=3 uid="uid://dosu1w3u4dl47"]
+
+[ext_resource type="Script" uid="uid://dq72gb1j5sl0v" path="res://Scripts/GameLogic.cs" id="1_wke2t"]
+
+[node name="GameLogic" type="Node2D" unique_id=1088420632]
+script = ExtResource("1_wke2t")
