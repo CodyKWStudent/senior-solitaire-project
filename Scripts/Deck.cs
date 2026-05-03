@@ -91,6 +91,7 @@ public partial class Deck : Node2D
 
 			//Tell the slot it is a Foundation slot and assign its specific suit
 			newCardSlot.InitializeCardSlot(SlotType.Foundation, suit);
+			newCardSlot.AddToGroup("Foundations");
 
 			if(FoundationSlotContainer != null)
 			{

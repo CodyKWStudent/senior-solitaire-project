@@ -1,6 +1,9 @@
 [gd_scene format=3 uid="uid://mtn0uqmdfwin"]
 
 [ext_resource type="Script" uid="uid://bfsnsntrnrf2k" path="res://Scripts/CardManager.cs" id="1_bo1nx"]
+[ext_resource type="PackedScene" uid="uid://dosu1w3u4dl47" path="res://Scenes/GameLogic.tscn" id="3_8gbba"]
+[ext_resource type="PackedScene" uid="uid://iybvgxppdvf3" path="res://Scenes/GameEnd.tscn" id="4_jjvhh"]
+[ext_resource type="PackedScene" uid="uid://dpd3gw2x6jwsn" path="res://Scenes/HeaderMenu.tscn" id="5_kry3j"]
 [ext_resource type="PackedScene" uid="uid://du5v47ot2mvbj" path="res://Scenes/Deck.tscn" id="8_344ge"]
 
 [node name="Main" type="Node2D" unique_id=1948449585]
@@ -8,22 +11,85 @@ metadata/_edit_vertical_guides_ = [1081.0]
 metadata/_edit_horizontal_guides_ = [1920.0]
 
 [node name="CardManager" type="Node2D" parent="." unique_id=2017600728 node_paths=PackedStringArray("GameDeck")]
+position = Vector2(0, 91)
 script = ExtResource("1_bo1nx")
 GameDeck = NodePath("../Deck")
 
 [node name="InputManager" type="Node2D" parent="." unique_id=1891106296]
+position = Vector2(0, 91)
 
 [node name="Deck" parent="." unique_id=1592302419 node_paths=PackedStringArray("TableauContainer", "FoundationSlotContainer", "DeckDrawContainer") instance=ExtResource("8_344ge")]
-position = Vector2(79, 345)
+position = Vector2(79, 436)
 TableauContainer = NodePath("../TableauContainer")
 FoundationSlotContainer = NodePath("../FoundationSlotContainer")
 DeckDrawContainer = NodePath("../DeckDrawContainer")
 
 [node name="TableauContainer" type="Node2D" parent="." unique_id=2096771345]
-position = Vector2(79, 576)
+position = Vector2(79, 667)
 
 [node name="FoundationSlotContainer" type="Node2D" parent="." unique_id=1852641002]
-position = Vector2(383, 125)
+position = Vector2(383, 216)
 
 [node name="DeckDrawContainer" type="Node2D" parent="." unique_id=55508995]
-position = Vector2(231, 345)
+position = Vector2(231, 436)
+
+[node name="GameLogic" parent="." unique_id=1088420632 instance=ExtResource("3_8gbba")]
+position = Vector2(0, 91)
+
+[node name="GameEnd" parent="." unique_id=20722506 instance=ExtResource("4_jjvhh")]
+position = Vector2(294, 314)
+
+[node name="GameTimer" type="Timer" parent="." unique_id=1635561884]
+autostart = true
+
+[node name="HeaderMenu" type="Control" parent="." unique_id=151155734]
+layout_mode = 3
+anchors_preset = 0
+offset_left = 271.0
+offset_top = 45.0
+offset_right = 311.0
+offset_bottom = 85.0
+
+[node name="ColorRect" type="ColorRect" parent="HeaderMenu" unique_id=1179466910]
+layout_mode = 0
+offset_left = -269.0
+offset_top = -42.0
+offset_right = 807.0
+offset_bottom = 53.0
+color = Color(0.3895379, 0.38953787, 0.38953784, 0.34117648)
+
+[node name="UndoButton" type="Button" parent="HeaderMenu" unique_id=2107202017]
+layout_mode = 1
+anchors_preset = 15
+anchor_right = 1.0
+anchor_bottom = 1.0
+offset_left = 50.0
+offset_top = -17.0
+offset_right = 130.0
+offset_bottom = -7.0
+grow_horizontal = 2
+grow_vertical = 2
+theme_override_font_sizes/font_size = 24
+text = "Undo"
+
+[node name="HamburgerMenu" parent="HeaderMenu" unique_id=2074371641 instance=ExtResource("5_kry3j")]
+position = Vector2(-207, 2)
+scale = Vector2(0.1, 0.1)
+
+[node name="TimeLabel" type="Label" parent="HeaderMenu" unique_id=1144060665]
+layout_mode = 0
+offset_left = 241.0
+offset_top = -8.0
+offset_right = 305.0
+offset_bottom = 26.0
+theme_override_font_sizes/font_size = 24
+text = "Time:"
+
+[node name="ScoreLabel" type="Label" parent="HeaderMenu" unique_id=2048028335]
+layout_mode = 0
+offset_left = 432.0
+offset_top = -9.0
+offset_right = 509.0
+offset_bottom = 25.0
+theme_override_font_sizes/font_size = 24
+text = "Score: "

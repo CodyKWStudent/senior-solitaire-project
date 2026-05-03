@@ -14,7 +14,9 @@ public partial class CardSlot : Node2D
     
     // --- Signal for Winning ---
     [Signal]
-    public delegate void FoundationCompleteEventHandler();
+    public delegate void FoundationCompleteEventHandler(CardSuit suit);
+    [Signal]
+    public delegate void FoundationIncompleteEventHandler(CardSuit suit);
     
 	public void InitializeCardSlot (SlotType type, CardSuit suit)
 	{
@@ -92,13 +94,19 @@ public partial class CardSlot : Node2D
         // Check for King to emit win signal!
         if (SlotType == SlotType.Foundation && card.Rank == CardRank.King)
         {
-            //EmitSignal(SignalName.FoundationComplete);
+            EmitSignal(SignalName.FoundationComplete, (int)TargetSuit);
         }	
 	}
 	public void RemoveCard(Card card)
 	{
 		if (stackedCards.Contains(card))
         {
+            // If a King was removed, the foundation is no longer complete
+            if (SlotType == SlotType.Foundation && card.Rank == CardRank.King)
+            {
+                EmitSignal(SignalName.FoundationIncomplete, (int)TargetSuit);
+            }
+
             stackedCards.Remove(card);
 
             // Unhide the card beneath it!

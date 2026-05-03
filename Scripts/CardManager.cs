@@ -32,38 +32,40 @@ public partial class  CardManager : Node2D
 
 	public override void _UnhandledInput(InputEvent @event)
 	{
-		// Check if the input event is specifically a mouse button event
-		if (@event is InputEventMouseButton mouseEvent)
+		if (@event is InputEventMouseButton mouseEvent && mouseEvent.ButtonIndex == MouseButton.Left)
 		{
-			//Ensure we are only looking at the Left Mouse Button
-			if (mouseEvent.ButtonIndex == MouseButton.Left)
+			if (mouseEvent.IsPressed())
 			{
-				if (mouseEvent.IsPressed()){
-					
-					GD.Print("Left Button Pressed");
-					
-					if (RaycastCheckForDeck())
-					{
-						GD.Print("Deck Clicked!");
-						if (GameDeck != null) GameDeck.DrawCardFromDeck(3);
-						return; //Stop running to not accidentally drag any cards
-					}
-					
-					// Perform a raycast at the mouse position to check for card interaction
-					RaycastCheckForCard();
-					if (rootDraggedCard != null)
-					{
-						StartDraggingCard(rootDraggedCard); // Start dragging the card if one was selected
-					}
-				}
-				else
+				GD.Print("Left Button Pressed");
+
+				if (RaycastCheckForDeck())
 				{
-					GD.Print("Left Button Released");
-					// Drop Logic Here
-					if (isDraggingCard)
+					GD.Print("Deck Clicked!");
+					if (GameDeck != null) GameDeck.DrawCardFromDeck(3);
+					return;
+				}
+
+				RaycastCheckForCard();
+				if (rootDraggedCard != null)
+				{
+					// Before starting a drag, try to auto-move to a foundation.
+					if (TryAutoMoveToFoundation(rootDraggedCard))
 					{
-						StopDraggingCard(); // Stop dragging the card when the left mouse button is released
+						// If successful, clear the selection and stop.
+						rootDraggedCard = null; 
+						return;
 					}
+					
+					// If auto-move fails, proceed with the drag.
+					StartDraggingCard(rootDraggedCard);
+				}
+			}
+			else // Mouse button released
+			{
+				GD.Print("Left Button Released");
+				if (isDraggingCard)
+				{
+					StopDraggingCard();
 				}
 			}
 		}
@@ -103,28 +105,11 @@ public partial class  CardManager : Node2D
 
 				if (originalTableau != null)
 				{
-					if (originalTableau.IsStackValid(rootDraggedCard))
+					if (!originalTableau.IsStackValid(rootDraggedCard))
 					{
-						GD.Print("Valid Stack Clicked: " + rootDraggedCard.Name);
-						originalSlot = null; // Not a slot drag
-						StartDraggingCard(rootDraggedCard);
-					}
-					else
-					{
-						GD.Print("Invalid Sequence. Cannot drag this sub-stack.");
+						GD.Print("Invalid Sequence. Cannot interact with this card.");
 						rootDraggedCard = null;
 					}
-				}
-				else if (originalSlot != null)
-				{
-					GD.Print("Valid Card From Slot Clicked: " + rootDraggedCard.Name);
-					originalTableau = null; // Not a tableau drag
-					StartDraggingCard(rootDraggedCard);
-				}
-				else // Not in a tableau or slot, so it's a waste card
-				{
-					GD.Print("Valid Card From Waste Clicked: " + rootDraggedCard.Name);
-					StartDraggingCard(rootDraggedCard);
 				}
 			}
 			
@@ -503,9 +488,17 @@ public partial class  CardManager : Node2D
 	{
 		if (originalTableau != null)
 		{
-			foreach (var card in draggedCards)
+			// If dragging, draggedCards has the list. If not, it's a single card click.
+			if (draggedCards.Count > 0)
 			{
-				originalTableau.RemoveCardFromTableau(card);
+				foreach (var card in draggedCards)
+				{
+					originalTableau.RemoveCardFromTableau(card);
+				}
+			}
+			else
+			{
+				originalTableau.RemoveCardFromTableau(rootDraggedCard);
 			}
 		}
 		else if (originalSlot != null)
@@ -517,6 +510,7 @@ public partial class  CardManager : Node2D
 			GameDeck.RemoveCardFromDeck(rootDraggedCard);
 		}
 	}
+
 
 	private void SnapCardBack()
 	{
@@ -533,6 +527,30 @@ public partial class  CardManager : Node2D
 			rootDraggedCard.Position = originalCardPosition;
 		}
 	}
+	
+	private bool TryAutoMoveToFoundation(Card card)
+	{
+		// This logic only applies if we're trying to move a single card.
+		if (originalTableau != null && originalTableau.GetCardsFrom(card).Count > 1)
+		{
+			return false;
+		}
+
+		// Find all foundation slots in the scene.
+		foreach (var node in GetTree().GetNodesInGroup("Foundations"))
+		{
+			if (node is CardSlot foundationSlot && foundationSlot.IsValidDrop(card))
+			{
+				GD.Print($"Auto-moving {card.Name} to {foundationSlot.Name}");
+				RemoveCardFromOriginalLocation();
+				foundationSlot.AddCard(card);
+				return true; // Move was successful
+			}
+		}
+
+		return false; // No valid foundation found
+	}
+
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
 	public override void _Process(double delta)
