@@ -7,7 +7,7 @@ public partial class GameEnd : Node
 	private Window GameEndWindow;
 
 	private Label timeNumber;
-	private Label scoreNumber;
+	private Label turnsNumber;
 	private MenuButton newDeal;
 	private MenuButton quit;
 	private ColorRect menuCover;
@@ -26,16 +26,17 @@ public partial class GameEnd : Node
 		//gameEndWindow.Borderless = true;
 		GameEndWindow.Visible = false;
 		
-		menuCover = GetNode<ColorRect>("GameEndWindow/MenuCover");
-		menuCover.Visible = true;
+		menuCover = GetNode<ColorRect>("MenuCover");
+		menuCover.Visible = false;
 		
 		timeNumber = GetNode<Label>("GameEndWindow/TimeLabel/TimeNumber");
-		scoreNumber = GetNode<Label>("GameEndWindow/ScoreLabel/ScoreNumber");
+		turnsNumber = GetNode<Label>("GameEndWindow/TurnsLabel/TurnsNumber");
 		newDeal = GetNode<MenuButton>("GameEndWindow/NewDealButton");
 		quit = GetNode<MenuButton>("GameEndWindow/QuitButton");
-
+		
 		newDeal.Pressed += OnNewDealPress;
 		quit.Pressed += OnQuitPress;
+		GameEndWindow.CloseRequested += HideWindow;
 	}
 
 	// Called every frame. 'delta' is the elapsed time since the previous frame.
@@ -64,15 +65,19 @@ public partial class GameEnd : Node
 	{
 		GetTree().Quit();
 	}
-
-	private void TimeUpdate()
+	
+	public void ShowGameEndWindow(string finalTime, string finalTurns)
 	{
+		timeNumber.Text = finalTime;
+		turnsNumber.Text = finalTurns;
 		
+		GameEndWindow.Show();
+		menuCover.Visible = true;
 	}
 
-	public void ShowGameEndWindow()
+	private void HideWindow()
 	{
-		GameEndWindow.Visible = true;
+		GameEndWindow.Hide();
+		menuCover.Visible = false;
 	}
-
 }

@@ -3,16 +3,17 @@
 [ext_resource type="Script" uid="uid://dlg5w0ua4obpk" path="res://Scripts/GameEnd.cs" id="1_6cj8v"]
 
 [node name="GameEnd" type="Node2D" unique_id=391729043]
-visible = false
 script = ExtResource("1_6cj8v")
 
 [node name="GameEndWindow" type="Window" parent="." unique_id=20722506]
 oversampling_override = 1.0
-position = Vector2i(294, 314)
+position = Vector2i(279, 314)
 size = Vector2i(500, 500)
-visible = false
 
-[node name="Camera2D" type="Camera2D" parent="GameEndWindow" unique_id=1883404990]
+[node name="ColorRect" type="ColorRect" parent="GameEndWindow" unique_id=414984236]
+offset_right = 503.0
+offset_bottom = 505.0
+color = Color(0.27129176, 0.27129176, 0.27129173, 1)
 
 [node name="NewDealButton" type="MenuButton" parent="GameEndWindow" unique_id=1322772741]
 anchors_preset = 8
@@ -22,10 +23,11 @@ anchor_right = 0.5
 anchor_bottom = 0.5
 offset_left = -150.0
 offset_top = -15.5
-offset_right = -67.99992
+offset_right = -50.0
 offset_bottom = 15.5
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_font_sizes/font_size = 24
 text = "New Deal"
 flat = false
 item_count = 1
@@ -43,6 +45,7 @@ offset_right = 142.0
 offset_bottom = 15.5
 grow_horizontal = 2
 grow_vertical = 2
+theme_override_font_sizes/font_size = 24
 text = "Quit Game"
 flat = false
 
@@ -50,9 +53,9 @@ flat = false
 anchors_preset = 5
 anchor_left = 0.5
 anchor_right = 0.5
-offset_left = -47.0
-offset_right = 47.0
-offset_bottom = 23.0
+offset_left = -148.0
+offset_right = 148.0
+offset_bottom = 67.0
 grow_horizontal = 2
 theme_override_font_sizes/font_size = 48
 text = "Game Won! "
@@ -64,47 +67,48 @@ uppercase = true
 anchors_preset = 4
 anchor_top = 0.5
 anchor_bottom = 0.5
-offset_left = 100.0
-offset_top = -100.0
-offset_right = 140.0
-offset_bottom = -77.0
+offset_left = 67.0
+offset_top = -134.0
+offset_right = 207.0
+offset_bottom = -100.0
 grow_vertical = 2
 theme_override_font_sizes/font_size = 24
-text = "Time:"
+text = "Time Taken:"
 
 [node name="TimeNumber" type="Label" parent="GameEndWindow/TimeLabel" unique_id=697528645]
 layout_mode = 0
-offset_left = 75.0
-offset_right = 115.0
-offset_bottom = 23.0
+offset_left = 50.0
+offset_top = 38.0
+offset_right = 95.0
+offset_bottom = 72.0
 theme_override_font_sizes/font_size = 24
 text = "XXX"
 
-[node name="ScoreLabel" type="Label" parent="GameEndWindow" unique_id=565086553]
+[node name="TurnsLabel" type="Label" parent="GameEndWindow" unique_id=565086553]
 anchors_preset = 6
 anchor_left = 1.0
 anchor_top = 0.5
 anchor_right = 1.0
 anchor_bottom = 0.5
-offset_left = -200.0
-offset_top = -105.5
-offset_right = -129.0
-offset_bottom = -71.5
+offset_left = -223.0
+offset_top = -134.0
+offset_right = -74.0
+offset_bottom = -100.0
 grow_horizontal = 0
 grow_vertical = 2
 theme_override_font_sizes/font_size = 24
-text = "Score:"
+text = "Turns Taken:"
 
-[node name="ScoreNumber" type="Label" parent="GameEndWindow/ScoreLabel" unique_id=1007860393]
+[node name="TurnsNumber" type="Label" parent="GameEndWindow/TurnsLabel" unique_id=1007860393]
 layout_mode = 0
-offset_left = 75.0
-offset_right = 115.0
-offset_bottom = 23.0
+offset_left = 50.0
+offset_top = 38.0
+offset_right = 95.0
+offset_bottom = 72.0
 theme_override_font_sizes/font_size = 24
 text = "XXX"
 
-[node name="MenuCover" type="ColorRect" parent="GameEndWindow" unique_id=1794148464]
-visible = false
+[node name="MenuCover" type="ColorRect" parent="." unique_id=1863527673]
 offset_right = 1080.0
 offset_bottom = 1920.0
 color = Color(0, 0, 0, 0.5372549)

@@ -2,18 +2,20 @@
 
 [ext_resource type="Script" uid="uid://bfsnsntrnrf2k" path="res://Scripts/CardManager.cs" id="1_bo1nx"]
 [ext_resource type="PackedScene" uid="uid://dosu1w3u4dl47" path="res://Scenes/GameLogic.tscn" id="3_8gbba"]
-[ext_resource type="PackedScene" uid="uid://iybvgxppdvf3" path="res://Scenes/GameEnd.tscn" id="4_jjvhh"]
-[ext_resource type="PackedScene" uid="uid://dpd3gw2x6jwsn" path="res://Scenes/HeaderMenu.tscn" id="5_kry3j"]
+[ext_resource type="PackedScene" uid="uid://b2m18ei1fi3je" path="res://Scenes/HowToPlay.tscn" id="4_kry3j"]
+[ext_resource type="Script" uid="uid://dmknv1iytwlrd" path="res://Scripts/HeaderMenu.cs" id="5_21xkr"]
 [ext_resource type="PackedScene" uid="uid://du5v47ot2mvbj" path="res://Scenes/Deck.tscn" id="8_344ge"]
 
 [node name="Main" type="Node2D" unique_id=1948449585]
 metadata/_edit_vertical_guides_ = [1081.0]
 metadata/_edit_horizontal_guides_ = [1920.0]
 
-[node name="CardManager" type="Node2D" parent="." unique_id=2017600728 node_paths=PackedStringArray("GameDeck")]
+[node name="CardManager" type="Node2D" parent="." unique_id=2017600728 node_paths=PackedStringArray("GameDeck", "GameLogic", "HeaderMenu")]
 position = Vector2(0, 91)
 script = ExtResource("1_bo1nx")
 GameDeck = NodePath("../Deck")
+GameLogic = NodePath("../GameLogic")
+HeaderMenu = NodePath("../HeaderMenu")
 
 [node name="InputManager" type="Node2D" parent="." unique_id=1891106296]
 position = Vector2(0, 91)
@@ -33,63 +35,113 @@ position = Vector2(383, 216)
 [node name="DeckDrawContainer" type="Node2D" parent="." unique_id=55508995]
 position = Vector2(231, 436)
 
-[node name="GameLogic" parent="." unique_id=1088420632 instance=ExtResource("3_8gbba")]
-position = Vector2(0, 91)
-
-[node name="GameEnd" parent="." unique_id=20722506 instance=ExtResource("4_jjvhh")]
-position = Vector2(294, 314)
-
-[node name="GameTimer" type="Timer" parent="." unique_id=1635561884]
-autostart = true
-
-[node name="HeaderMenu" type="Control" parent="." unique_id=151155734]
+[node name="HeaderMenu" type="Control" parent="." unique_id=151155734 node_paths=PackedStringArray("GameLogic")]
 layout_mode = 3
 anchors_preset = 0
 offset_left = 271.0
 offset_top = 45.0
 offset_right = 311.0
 offset_bottom = 85.0
+script = ExtResource("5_21xkr")
+GameLogic = NodePath("../GameLogic")
 
-[node name="ColorRect" type="ColorRect" parent="HeaderMenu" unique_id=1179466910]
+[node name="HeaderBackground" type="ColorRect" parent="HeaderMenu" unique_id=1179466910]
 layout_mode = 0
-offset_left = -269.0
-offset_top = -42.0
-offset_right = 807.0
+offset_left = -276.0
+offset_top = -48.0
+offset_right = 815.0
 offset_bottom = 53.0
-color = Color(0.3895379, 0.38953787, 0.38953784, 0.34117648)
+color = Color(0.25146988, 0.25147012, 0.25147003, 0.70980394)
 
 [node name="UndoButton" type="Button" parent="HeaderMenu" unique_id=2107202017]
+visible = false
 layout_mode = 1
 anchors_preset = 15
 anchor_right = 1.0
 anchor_bottom = 1.0
-offset_left = 50.0
-offset_top = -17.0
-offset_right = 130.0
-offset_bottom = -7.0
+offset_left = 85.0
+offset_top = -16.0
+offset_right = 165.0
+offset_bottom = -6.0
 grow_horizontal = 2
 grow_vertical = 2
 theme_override_font_sizes/font_size = 24
 text = "Undo"
 
-[node name="HamburgerMenu" parent="HeaderMenu" unique_id=2074371641 instance=ExtResource("5_kry3j")]
-position = Vector2(-207, 2)
-scale = Vector2(0.1, 0.1)
-
 [node name="TimeLabel" type="Label" parent="HeaderMenu" unique_id=1144060665]
 layout_mode = 0
-offset_left = 241.0
+offset_left = 240.0
 offset_top = -8.0
-offset_right = 305.0
+offset_right = 304.0
 offset_bottom = 26.0
 theme_override_font_sizes/font_size = 24
 text = "Time:"
 
-[node name="ScoreLabel" type="Label" parent="HeaderMenu" unique_id=2048028335]
+[node name="TimeNumber" type="Label" parent="HeaderMenu/TimeLabel" unique_id=1594265340]
 layout_mode = 0
-offset_left = 432.0
-offset_top = -9.0
-offset_right = 509.0
-offset_bottom = 25.0
+offset_left = 67.0
+offset_right = 118.0
+offset_bottom = 34.0
 theme_override_font_sizes/font_size = 24
-text = "Score: "
+text = "XX:XX"
+
+[node name="TurnsLabel" type="Label" parent="HeaderMenu" unique_id=2048028335]
+layout_mode = 0
+offset_left = 394.0
+offset_top = -8.0
+offset_right = 471.0
+offset_bottom = 26.0
+theme_override_font_sizes/font_size = 24
+text = "Turns: "
+
+[node name="TurnsNumber" type="Label" parent="HeaderMenu/TurnsLabel" unique_id=252648194]
+layout_mode = 0
+offset_left = 73.0
+offset_top = 1.0
+offset_right = 133.0
+offset_bottom = 35.0
+theme_override_font_sizes/font_size = 24
+text = "XXXX"
+
+[node name="NewDealButton" type="Button" parent="HeaderMenu" unique_id=2126123331]
+layout_mode = 0
+offset_left = -239.0
+offset_top = -16.0
+offset_right = -119.0
+offset_bottom = 34.0
+theme_override_font_sizes/font_size = 24
+text = "New Deal"
+
+[node name="WinGameButton" type="Button" parent="HeaderMenu" unique_id=967175254]
+layout_mode = 0
+offset_left = 100.0
+offset_top = -17.0
+offset_right = 227.00027
+offset_bottom = 33.0
+theme_override_font_sizes/font_size = 24
+text = "Win Game"
+
+[node name="QuitButton" type="Button" parent="HeaderMenu" unique_id=1091742482]
+layout_mode = 0
+offset_left = -99.0
+offset_top = -16.0
+offset_right = 33.0
+offset_bottom = 34.0
+theme_override_font_sizes/font_size = 24
+text = "Quit Game"
+
+[node name="HowToPlayButton" type="Button" parent="HeaderMenu" unique_id=444709853]
+layout_mode = 0
+offset_left = 577.0
+offset_top = -16.0
+offset_right = 751.22
+offset_bottom = 32.0
+theme_override_font_sizes/font_size = 24
+text = "How to Play"
+
+[node name="GameLogic" parent="." unique_id=1088420632 node_paths=PackedStringArray("howToPlay", "headerMenu") instance=ExtResource("3_8gbba")]
+position = Vector2(0, 91)
+howToPlay = NodePath("../HowToPlay")
+headerMenu = NodePath("../HeaderMenu")
+
+[node name="HowToPlay" parent="." unique_id=802217872 instance=ExtResource("4_kry3j")]

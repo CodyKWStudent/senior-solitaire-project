@@ -27,8 +27,9 @@ public partial class  CardManager : Node2D
 
 	
 	// --- External Classes ---
-	[Export] public Deck GameDeck; 
-
+	[Export] public Deck GameDeck;
+	[Export] public GameLogic GameLogic;
+	[Export] public HeaderMenu HeaderMenu;
 
 	public override void _UnhandledInput(InputEvent @event)
 	{
@@ -426,6 +427,7 @@ public partial class  CardManager : Node2D
 			GD.Print("Valid Foundation Move!");
 			RemoveCardFromOriginalLocation();
 			foundationSlot.AddCard(rootDraggedCard);
+			HeaderMenu.AddTurn();
 		}
 		else
 		{
@@ -448,6 +450,7 @@ public partial class  CardManager : Node2D
 			GD.Print("Valid Deck FreeCell Move!");
 			RemoveCardFromOriginalLocation();
 			deckSlot.AddCard(rootDraggedCard);
+			HeaderMenu.AddTurn();
 		}
 		else
 		{
@@ -466,6 +469,7 @@ public partial class  CardManager : Node2D
 			{
 				targetTableau.AddCardToTableau(c);
 			}
+			HeaderMenu.AddTurn();
 		}
 		else
 		{
@@ -482,6 +486,7 @@ public partial class  CardManager : Node2D
 		{
 			targetTableau.AddCardToTableau(c);
 		}
+		HeaderMenu.AddTurn();
 	}
 
 	private void RemoveCardFromOriginalLocation()
@@ -544,6 +549,7 @@ public partial class  CardManager : Node2D
 				GD.Print($"Auto-moving {card.Name} to {foundationSlot.Name}");
 				RemoveCardFromOriginalLocation();
 				foundationSlot.AddCard(card);
+				HeaderMenu.AddTurn();
 				return true; // Move was successful
 			}
 		}
