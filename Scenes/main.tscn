@@ -113,7 +113,6 @@ theme_override_font_sizes/font_size = 24
 text = "New Deal"
 
 [node name="WinGameButton" type="Button" parent="HeaderMenu" unique_id=967175254]
-visible = false
 layout_mode = 0
 offset_left = 100.0
 offset_top = -17.0
